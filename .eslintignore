@@ -1,0 +1,9 @@
+package.js  // Package, Cordova and Npm vars are set as global, so no need to ignore this file
+package.json
+node_modules/
+bower_components/
+.npm/
+build/
+.meteor/
+packages/
+.git/
