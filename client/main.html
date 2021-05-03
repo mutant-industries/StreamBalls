@@ -2,6 +2,31 @@
   <title>play-react</title>
 </head>
 
-<body>
+<body style="background-color: black">
   <div id="react-target"></div>
+
+  <div class="container" style="padding-top: 15px">
+      <div class="row">
+          <div class="col">
+              <input type="hidden" id="localSessionDescription" readonly="true">
+              <input type="hidden" id="remoteSessionDescription">
+              <div id="remoteVideos" style="text-align: center">
+                  <video style="width:600px" id="remote_video" controls autoplay playsinline></video>
+              </div>
+              <!--<button onclick="startSession()"> Start Session </button>-->
+              <div id="div" style="text-align: center; color: white">
+                  <fieldset id="fs_subscribe" disabled>
+                      <legend>Subscription</legend>
+                      <div>
+                          <button id="btn_subscribe">Subscribe</button>
+                          <br/>
+                          <span id="sub_status"></span>
+                          <br/>
+                          <span id="connection_status"></span>
+                      </div>
+                  </fieldset>
+              </div>
+          </div>
+      </div>
+  </div>
 </body>
