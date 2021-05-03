@@ -5,7 +5,7 @@
         "sourceType": "module"
     },
     "extends": [
-        "airbnb",
+//        "airbnb",
         "plugin:meteor/recommended"
     ],
     "plugins": [
@@ -46,7 +46,7 @@
             }
         ],
         "comma-dangle": ["error", "never"],
-        "curly": ["error", "multi-or-nest", "consistent"],
+        "curly": [2],
         "no-param-reassign": ["error", {
             "props": false
         }],

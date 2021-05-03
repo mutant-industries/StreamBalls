@@ -1,4 +1,5 @@
 import { Meteor } from 'meteor/meteor';
+import { check } from 'meteor/check';
 import { StateCollection, PREVIEW_STREAM_READY_KEY } from '/imports/api/state';
 
 const mediasoup = require('mediasoup');
@@ -7,193 +8,26 @@ const grandiose = require('grandiose');
 const config = require('./config');
 
 // ----------------------------------------------------------------------------
-let worker;
-const producerResources = {};
-const consumerResources = [];
-let mediasoupRouter;
 
 const AUDIO_SSRC = 1111;
 const AUDIO_PT = 97;
 const VIDEO_SSRC = 2222;
 const VIDEO_PT = 96;
 
+let worker;
+let router;
+const producer = {};
+const clients = [];
+
 // ----------------------------------------------------------------------------
 
-Meteor.publish('state', function (key) {
-  return StateCollection.find({key});
-});
-
-const setPreviewStreamReady = Meteor.bindEnvironment((ready) => {
-  const stateDoc = StateCollection.findOne({key: PREVIEW_STREAM_READY_KEY});
-
-  StateCollection.update(stateDoc._id, {
-    $set: { value: ready }
-  });
-});
-
-Meteor.startup(() => {
-  if (StateCollection.find({key: PREVIEW_STREAM_READY_KEY}).count() === 0) {
-    StateCollection.insert({key: PREVIEW_STREAM_READY_KEY, value: false});
+Meteor.startup(async () => {
+  // preview stream ready state
+  if (StateCollection.find({ key: PREVIEW_STREAM_READY_KEY }).count() === 0) {
+    StateCollection.insert({ key: PREVIEW_STREAM_READY_KEY, value: false });
   }
 
-  setPreviewStreamReady(false);
-});
-
-// ----------------------------------------------------------------------------
-
-function ffmpegServiceReset() {
-  console.log('calling ffmpegServiceReset');
-
-  grandiose.find({
-    showLocalSources: true
-    // extraIPs: [ "192.168.87.9"]
-  }, 30000)
-    .then(async function (result) {
-      for (const device of result) {
-        if (device.name.match(/\(OBS\)/) !== null) {
-          return ffmpegRun(device.name);
-        }
-      }
-
-      console.log('no OBS NDI source found: ', result);
-
-      ffmpegServiceReset();
-    })
-    .catch(function (err) {
-      console.log('NDI find failed: ', err);
-      // console.error(err);
-      ffmpegServiceReset();
-    });
-}
-
-async function ffmpegRun(ndiHost) {
-  await createFfmpegProducers();
-
-  const listenIps = config.mediasoup.webRtcTransport.listenIps[0];
-  const ip = listenIps.announcedIp || listenIps.ip;
-
-  const command = `ffmpeg -hide_banner 
-        -init_hw_device qsv=hw -hwaccel qsv 
-        -f libndi_newtek 
-        -i "${ndiHost}"
-        -map 0:a:0 
-        -c:a libopus -b:a 12k -vbr off 
-        -application lowdelay -frame_duration 20 -apply_phase_inv false 
-        -map 0:v:0 
-        -c:v h264_qsv 
-        -vf vpp_qsv=w=iw/2:h=ih/2 
-        -r 30 -g 60 
-        -b:v 1400K -minrate 1400K -maxrate 1400K -bufsize 50 
-        -preset veryfast -profile:v baseline -look_ahead 0 
-        -f tee 
-        "[select=a:f=rtp:ssrc=${AUDIO_SSRC}:payload_type=${AUDIO_PT}]rtp://${ip}:${producerResources.audioParams.port}?rtcpport=${producerResources.audioParams.RTCP_port}|[select=v:f=rtp:ssrc=${VIDEO_SSRC}:payload_type=${VIDEO_PT}]rtp://${ip}:${producerResources.videoParams.port}?rtcpport=${producerResources.videoParams.RTCP_port}"`;
-
-  const ffmpeg = exec(command.replace(/\n|\r/g, ''));
-
-  console.log('----- ffmpeg started:');
-  console.log(command);
-
-  ffmpeg.stdout.on('data', function (data) {
-    // console.log(data.toString());
-  });
-
-  ffmpeg.stderr.on('data', function (data) {
-    // console.log(data.toString());
-  });
-
-  ffmpeg.on('exit', function (code) {
-    console.log(`ffmpeg ended, exit code: ${code}`);
-
-    setPreviewStreamReady(false);
-
-    ffmpegServiceReset();
-  });
-
-  setPreviewStreamReady(true);
-  // socketServer.emit('resumed');
-}
-
-(async () => {
-  try {
-    await runMediasoupWorker();
-    ffmpegServiceReset();
-  } catch (err) {
-    console.error(err);
-  }
-})();
-
-Meteor.onConnection(function (connection) {
-  console.log(`client connected: ${connection.id}`);
-
-  consumerResources[connection.id] = {};
-
-  connection.onClose(function () {
-    console.log(`client disconnected: ${connection.id}`);
-
-    // resources cleanup on disconnect
-    if (consumerResources[connection.id].consumerTransport && consumerResources[connection.id].consumerTransport.closed === false) {
-      consumerResources[connection.id].consumerTransport.close();
-    }
-
-    delete consumerResources[connection.id];
-  });
-});
-
-Meteor.methods({
-  getRouterRtpCapabilities() {
-    return mediasoupRouter.rtpCapabilities;
-  },
-  // --------------------------------
-  async createConsumerTransport() {
-    // this.unblock();
-
-    try {
-      const { transport, params } = await createWebRtcTransport();
-
-      consumerResources[this.connection.id].consumerTransport = transport;
-      return params;
-    } catch (err) {
-      console.error(err);
-
-      return { error: err.message };
-    }
-  },
-  async connectConsumerTransport(data) {
-    // this.unblock();
-
-    await consumerResources[this.connection.id].consumerTransport.connect({
-      dtlsParameters: data.dtlsParameters
-    });
-  },
-  async consumeAudio(data) {
-    // this.unblock();
-
-    if (producerResources.producerAudio && producerResources.producerPlainAudioTransport.closed === false) {
-      return await createConsumer(this.connection.id,
-        producerResources.producerAudio,
-        data.rtpCapabilities);
-    }
-    else {
-      return { error: 'wait for resumed event' };
-    }
-  },
-  async consumeVideo(data) {
-    // this.unblock();
-
-    if (producerResources.producerVideo && producerResources.producerPlainVideoTransport.closed === false) {
-      return await createConsumer(this.connection.id,
-        producerResources.producerVideo,
-        data.rtpCapabilities);
-    }
-    else {
-      return { error: 'wait for resumed event' };
-    }
-  },
-});
-
-// ----------------------------------------------------------------------------
-
-async function runMediasoupWorker() {
+  // mediasoup worker, router
   worker = await mediasoup.createWorker({
     logLevel: config.mediasoup.worker.logLevel,
     logTags: config.mediasoup.worker.logTags,
@@ -207,37 +41,149 @@ async function runMediasoupWorker() {
   });
 
   const { mediaCodecs } = config.mediasoup.router;
-  mediasoupRouter = await worker.createRouter({ mediaCodecs });
+
+  router = await worker.createRouter({ mediaCodecs });
+
+  // encoder start
+  ffmpegServiceReset();
+});
+
+Meteor.publish('state', function (key) {
+  check(key, String);
+
+  return StateCollection.find({ key });
+});
+
+const setPreviewStreamReady = Meteor.bindEnvironment((ready) => {
+  const stateDoc = StateCollection.findOne({ key: PREVIEW_STREAM_READY_KEY });
+
+  StateCollection.update(stateDoc._id, {
+    $set: { value: ready }
+  });
+});
+
+// ----------------------------------------------------------------------------
+
+Meteor.onConnection(function (connection) {
+  console.log(`client connected: ${connection.id}`);
+
+  clients[connection.id] = { consumers: {} };
+
+  connection.onClose(function () {
+    console.log(`client disconnected: ${connection.id}`);
+
+    // resources cleanup on disconnect
+    if (clients[connection.id].transport) {
+      clients[connection.id].transport.close();
+    }
+
+    delete clients[connection.id];
+  });
+});
+
+Meteor.methods({
+  getRouterRtpCapabilities() {
+    return router.rtpCapabilities;
+  },
+  // --------------------------------
+  async createConsumerTransport() {
+    // this.unblock();
+
+    const transport = await createWebRtcTransport();
+
+    clients[this.connection.id].transport = transport;
+
+    return {
+      id: transport.id,
+      iceParameters: transport.iceParameters,
+      iceCandidates: transport.iceCandidates,
+      dtlsParameters: transport.dtlsParameters
+    };
+  },
+  async connectConsumerTransport(data) {
+    // this.unblock();
+
+    await clients[this.connection.id].transport.connect({
+      dtlsParameters: data.dtlsParameters
+    });
+  },
+  async consumeAudio(data) {
+    // this.unblock();
+
+    if ( ! producer.audio || producer.audioTransport.closed) {
+      throw new Meteor.Error('wait for resumed event');
+    }
+
+    const consumer = await createConsumer(this.connection.id, producer.audio.id, data.rtpCapabilities);
+
+    return {
+      producerId: producer.audio.id,
+      id: consumer.id,
+      kind: consumer.kind,
+      rtpParameters: consumer.rtpParameters
+    };
+  },
+  async consumeVideo(data) {
+    // this.unblock();
+
+    if ( ! producer.video || producer.videoTransport.closed) {
+      throw new Meteor.Error('wait for resumed event');
+    }
+
+    const consumer = await createConsumer(this.connection.id, producer.video.id, data.rtpCapabilities);
+
+    return {
+      producerId: producer.video.id,
+      id: consumer.id,
+      kind: consumer.kind,
+      rtpParameters: consumer.rtpParameters
+    };
+  },
+  async setPaused(paused) {
+    // this.unblock();
+    check(paused, Boolean);
+
+    Object.values(clients[this.connection.id].consumers).forEach((consumer) => {
+      paused ? consumer.pause() : consumer.resume();
+    });
+  }
+});
+
+// ----------------------------------------------------------------------------
+
+async function createPlainTransport() {
+  return router.createPlainTransport({
+    listenIp: config.listenIp,
+    // ffmpeg and gstreamer don't support RTP/RTCP multiplexing ("a=rtcp-mux" in SDP)
+    rtcpMux: false,
+    comedia: true,
+    enableSctp: false
+  });
 }
 
 async function createFfmpegProducers() {
-  let transport;
+  const { mediaCodecs } = config.mediasoup.router;
 
-  if (producerResources.producerPlainAudioTransport && producerResources.producerPlainAudioTransport.closed === false) {
-    producerResources.producerPlainAudioTransport.close();
+  if (producer.audioTransport) {
+    producer.audioTransport.close();
   }
 
-  if (producerResources.producerPlainVideoTransport && producerResources.producerPlainVideoTransport.closed === false) {
-    producerResources.producerPlainVideoTransport.close();
+  if (producer.videoTransport) {
+    producer.videoTransport.close();
   }
 
-  transport = await createPlainTransport();
-  producerResources.producerPlainAudioTransport = transport.transport;
-  producerResources.audioParams = transport.params;
+  producer.audioTransport = await createPlainTransport();
+  producer.videoTransport = await createPlainTransport();
 
-  transport = await createPlainTransport();
-  producerResources.producerPlainVideoTransport = transport.transport;
-  producerResources.videoParams = transport.params;
-
-  producerResources.producerAudio = await producerResources.producerPlainAudioTransport.produce({
+  producer.audio = await producer.audioTransport.produce({
     kind: 'audio',
     rtpParameters: {
       codecs: [
         {
-          mimeType: 'audio/opus',
-          payloadType: AUDIO_PT,
-          clockRate: 48000,
-          channels: 2
+          mimeType: mediaCodecs[0].mimeType,
+          clockRate: mediaCodecs[0].clockRate,
+          channels: mediaCodecs[0].channels,
+          payloadType: AUDIO_PT
         }
       ],
       encodings: [
@@ -248,19 +194,15 @@ async function createFfmpegProducers() {
     }
   });
 
-  producerResources.producerVideo = await producerResources.producerPlainVideoTransport.produce({
+  producer.video = await producer.videoTransport.produce({
     kind: 'video',
     rtpParameters: {
       codecs: [
         {
-          mimeType: 'video/H264',
-          payloadType: VIDEO_PT,
-          clockRate: 90000,
-          parameters:
-                        {
-                          'packetization-mode': 1,
-                          'profile-level-id': '42e01f'
-                        }
+          mimeType: mediaCodecs[1].mimeType,
+          clockRate: mediaCodecs[1].clockRate,
+          parameters: mediaCodecs[1].parameters,
+          payloadType: VIDEO_PT
         }
       ],
       encodings: [
@@ -274,79 +216,98 @@ async function createFfmpegProducers() {
 
 // ----------------------------------------------------------------------------
 
-async function createWebRtcTransport() {
-  const {
-    initialAvailableOutgoingBitrate
-  } = config.mediasoup.webRtcTransport;
+async function ffmpegRun(ndiDevice) {
+  await createFfmpegProducers();
 
-  const transport = await mediasoupRouter.createWebRtcTransport({
-    listenIps: config.mediasoup.webRtcTransport.listenIps,
-    enableUdp: true,
-    enableTcp: true,
-    preferUdp: true,
-    initialAvailableOutgoingBitrate
+  const listenIps = config.mediasoup.webRtcTransport.listenIps[0];
+  const ip = listenIps.announcedIp || listenIps.ip;
+
+  const command = `ffmpeg -hide_banner 
+        -init_hw_device qsv=hw -hwaccel qsv 
+        -f libndi_newtek 
+        -i "${ndiDevice.name}"
+        -map 0:a:0 
+        -c:a libopus -b:a 12k -vbr off 
+        -application lowdelay -frame_duration 20 -apply_phase_inv false 
+        -map 0:v:0 
+        -c:v h264_qsv 
+        -vf vpp_qsv=w=iw/2:h=ih/2 
+        -r 30 -g 60 
+        -b:v 1400K -minrate 1400K -maxrate 1400K -bufsize 50 
+        -preset veryfast -profile:v baseline -look_ahead 0 
+        -f tee 
+        "[select=a:f=rtp:ssrc=${AUDIO_SSRC}:payload_type=${AUDIO_PT}]rtp://${ip}:${producer.audioTransport.tuple.localPort}?rtcpport=${producer.audioTransport.rtcpTuple.localPort}|[select=v:f=rtp:ssrc=${VIDEO_SSRC}:payload_type=${VIDEO_PT}]rtp://${ip}:${producer.videoTransport.tuple.localPort}?rtcpport=${producer.videoTransport.rtcpTuple.localPort}"`;
+
+  const ffmpeg = exec(command.replace(/\n|\r/g, ''));
+
+  console.log('ffmpeg source:', ndiDevice, 'command:', command);
+
+  ffmpeg.stdout.on('data', function (data) {
+    // console.log(data.toString());
   });
 
-  return {
-    transport,
-    params: {
-      id: transport.id,
-      iceParameters: transport.iceParameters,
-      iceCandidates: transport.iceCandidates,
-      dtlsParameters: transport.dtlsParameters
-    }
-  };
+  ffmpeg.stderr.on('data', function (data) {
+    // console.log(data.toString());
+  });
+
+  ffmpeg.on('exit', function (code) {
+    console.log(`ffmpeg ended, exit code: ${code}`);
+
+    ffmpegServiceReset();
+  });
+
+  setPreviewStreamReady(true);
 }
 
-async function createPlainTransport() {
-  const transport = await mediasoupRouter.createPlainTransport({
-    listenIp: config.listenIp,
-    // ffmpeg and gstreamer don't support RTP/RTCP multiplexing ("a=rtcp-mux" in SDP)
-    rtcpMux: false,
-    comedia: true,
-    enableSctp: false
-  });
+function ffmpegServiceReset() {
+  console.log('calling ffmpegServiceReset');
 
-  return {
-    transport,
-    params: {
-      id: transport.id,
-      ip: transport.tuple.localIp,
-      port: transport.tuple.localPort,
-      RTCP_port: transport.rtcpTuple.localPort
-    }
-  };
+  setPreviewStreamReady(false);
+
+  grandiose.find({
+    showLocalSources: true
+    // extraIPs: [ "192.168.87.9"]
+  }, 30000)
+    .then(async (result) => {
+      for (const device of result) {
+        if (device.name.match(/\(OBS\)/) !== null) {
+          return ffmpegRun(device);
+        }
+      }
+
+      console.log('no OBS NDI source found', result);
+      // avoid stack overflow
+      setTimeout(ffmpegServiceReset, 0);
+    })
+    .catch((err) => {
+      console.log('NDI find failed', err);
+      // avoid stack overflow
+      setTimeout(ffmpegServiceReset, 0);
+    });
 }
 
 // ----------------------------------------------------------------------------
 
-async function createConsumer(clientId, producer, rtpCapabilities) {
-  if (!mediasoupRouter.canConsume({ producerId: producer.id, rtpCapabilities })) {
-    console.error('can not consume');
-    return {};
+async function createWebRtcTransport() {
+  return router.createWebRtcTransport({
+    listenIps: config.mediasoup.webRtcTransport.listenIps,
+    enableUdp: true,
+    enableTcp: true,
+    preferUdp: true
+  });
+}
+
+async function createConsumer(clientId, producerId, rtpCapabilities) {
+  if ( ! router.canConsume({ producerId, rtpCapabilities })) {
+    throw new Meteor.Error('can not consume');
   }
 
-  // closed on related consumerTransport close
-  // reference required for pause / resume (?)
-  let consumer;
+  // consumer closed on clients[clientId].transport.close()
+  const consumer = await clients[clientId].transport.consume({
+    producerId,
+    rtpCapabilities,
+    paused: true
+  });
 
-  try {
-    consumer = await consumerResources[clientId].consumerTransport.consume({
-      producerId: producer.id,
-      rtpCapabilities,
-      paused: false// producer.kind === 'video',
-    });
-  } catch (error) {
-    console.error('consume failed', error);
-    return {};
-  }
-
-  return {
-    producerId: producer.id,
-    id: consumer.id,
-    kind: consumer.kind,
-    rtpParameters: consumer.rtpParameters,
-    type: consumer.type,
-    producerPaused: consumer.producerPaused
-  };
+  return clients[clientId].consumers[consumer.kind] = consumer;
 }

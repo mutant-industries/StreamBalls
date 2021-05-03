@@ -1,9 +1,9 @@
-import {Meteor} from 'meteor/meteor';
-import {StateCollection, PREVIEW_STREAM_READY_KEY} from '../imports/api/state';
+import { Meteor } from 'meteor/meteor';
+import { StateCollection, PREVIEW_STREAM_READY_KEY } from '../imports/api/state';
 
 const mediasoup = require('mediasoup-client');
 
-let device;
+// -----------------------------------------------------------------
 
 const $ = document.querySelector.bind(document);
 const $fsSubscribe = $('#fs_subscribe');
@@ -11,30 +11,30 @@ const $btnSubscribe = $('#btn_subscribe');
 const $txtConnection = $('#connection_status');
 const $txtSubscription = $('#sub_status');
 
+let device;
+
 $btnSubscribe.addEventListener('click', subscribe);
 
 $txtConnection.innerHTML = 'Connecting...';
 
 // connected event
-async function connect() {
+function connect() {
   $txtConnection.innerHTML = 'Connected';
   $fsSubscribe.disabled = false;
 
-  Meteor.call('getRouterRtpCapabilities', async function (error, data) {
-    console.log('caps data: ', data);
+  Meteor.call('getRouterRtpCapabilities', async (error, data) => {
+    device = new mediasoup.Device();
 
-    await loadDevice(data);
+    await device.load({ routerRtpCapabilities: data });
   });
 }
 
 // state change events
 Meteor.subscribe('state', PREVIEW_STREAM_READY_KEY);
 
-StateCollection.find({key: PREVIEW_STREAM_READY_KEY}).observe({
+StateCollection.find({ key: PREVIEW_STREAM_READY_KEY }).observe({
   changed(newDoc, oldDoc) {
-    console.log('state changed event: ', newDoc, oldDoc);
-
-    if (newDoc.value) {
+    if (!oldDoc.value && newDoc.value) {
       subscribe();
     }
   }
@@ -42,33 +42,14 @@ StateCollection.find({key: PREVIEW_STREAM_READY_KEY}).observe({
 
 // -----------------------------------------------------------------
 
-async function loadDevice(routerRtpCapabilities) {
-  try {
-    device = new mediasoup.Device();
-  } catch (error) {
-    if (error.name === 'UnsupportedError') {
-      console.error('browser not supported');
-    }
-  }
-
-  await device.load({ routerRtpCapabilities });
-}
-
-async function subscribe() {
-  Meteor.call('createConsumerTransport', {forceTcp: false}, async function (error, data) {
-
-    if (error || data.error) {
-      console.error(data.error);
-      return;
-    }
-
-    console.log('createRecvTransport ted: ', data);
+function subscribe() {
+  Meteor.call('createConsumerTransport', { forceTcp: false }, async (error, data) => {
 
     const transport = device.createRecvTransport(data);
 
     transport.on('connect', ({ dtlsParameters }, callback, errback) => {
-      Meteor.call('connectConsumerTransport', {transportId: transport.id, dtlsParameters}, function (error) {
-        callback();
+      Meteor.call('connectConsumerTransport', {transportId: transport.id, dtlsParameters}, (error) => {
+        error ? errback(error) : callback();
       });
     });
 
@@ -102,16 +83,18 @@ async function subscribe() {
 
     await consume(transport, 'Video', stream);
     await consume(transport, 'Audio', stream);
+
+    Meteor.call('setPaused', false);
   });
 }
 
-async function consume(transport, k, stream) {
+async function consume(transport, kind, stream) {
   const { rtpCapabilities } = device;
 
-  Meteor.call(`consume${k}`, { rtpCapabilities }, async function (error, data) {
+  Meteor.call(`consume${kind}`, { rtpCapabilities }, async (error, data) => {
 
-    if (data.error) {
-      console.error(data.error);
+    if (error) {
+      console.error(error);
       return;
     }
 
@@ -124,10 +107,10 @@ async function consume(transport, k, stream) {
 
     stream.addTrack(consumer.track);
   });
-
 }
 
+// -----------------------------------------------------------------
 
-document.addEventListener('DOMContentLoaded', function (e) {
+document.addEventListener('DOMContentLoaded', (e) => {
   connect();
 });
