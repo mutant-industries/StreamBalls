@@ -1,8 +1,8 @@
 import React from 'react';
-import { Info } from './Info.jsx';
+import { Preview } from './preview/preview.jsx';
 
 export const App = () => (
   <div>
-    <Info />
+    <Preview />
   </div>
 );

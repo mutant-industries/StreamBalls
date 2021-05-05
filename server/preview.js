@@ -89,6 +89,11 @@ Meteor.methods({
   async createConsumerTransport() {
     // this.unblock();
 
+    // resources cleanup on reset
+    if (clients[this.connection.id].transport) {
+      clients[this.connection.id].transport.close();
+    }
+
     const transport = await createWebRtcTransport();
 
     clients[this.connection.id].transport = transport;
