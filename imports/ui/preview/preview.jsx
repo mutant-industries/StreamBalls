@@ -13,7 +13,11 @@ export const Preview = () => {
   previewInstance.reset();
 
   return (
-    <video id="remote_video" ref={video => { this.video = video }} controls playsInline
-           onPause={() => previewInstance.setPaused(true)} onPlay={() => previewInstance.setPaused(false)}/>
+    <video id="remote_video"
+           ref={video => { this.video = video }}
+           controls
+           playsInline
+           onPause={() => previewInstance.setPaused(true)}
+           onPlay={() => previewInstance.setPaused(false)}/>
   );
 };
