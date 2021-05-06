@@ -15,6 +15,7 @@
     "mediasoup": "^3.7.4",
     "mediasoup-client": "^3.6.30",
     "meteor-node-stubs": "^1.0.1",
+    "network-interfaces": "^1.1.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },

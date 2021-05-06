@@ -1,11 +1,11 @@
 import { Meteor } from 'meteor/meteor';
 import { check } from 'meteor/check';
 import { StateCollection, PREVIEW_STREAM_READY_KEY } from '/imports/api/state';
+import { config } from './config';
 
 const mediasoup = require('mediasoup');
 const { exec } = require('child_process');
 const grandiose = require('grandiose');
-const config = require('./config');
 
 // ----------------------------------------------------------------------------
 
@@ -158,7 +158,7 @@ Meteor.methods({
 
 async function createPlainTransport() {
   return router.createPlainTransport({
-    listenIp: config.listenIp,
+    listenIp: config.mediasoup.plainTransport.listenIp,
     // ffmpeg and gstreamer don't support RTP/RTCP multiplexing ("a=rtcp-mux" in SDP)
     rtcpMux: false,
     comedia: true,
@@ -224,8 +224,7 @@ async function createFfmpegProducers() {
 async function ffmpegRun(ndiDevice) {
   await createFfmpegProducers();
 
-  const listenIps = config.mediasoup.webRtcTransport.listenIps[0];
-  const ip = listenIps.announcedIp || listenIps.ip;
+  const ip = config.mediasoup.plainTransport.listenIp;
 
   const command = `ffmpeg -hide_banner 
         -init_hw_device qsv=hw -hwaccel qsv 

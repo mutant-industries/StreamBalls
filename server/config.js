@@ -1,8 +1,8 @@
-module.exports = {
-  listenIp: '0.0.0.0',
+const ni = require('network-interfaces');
+
+export const config = {
 
   mediasoup: {
-    // Worker settings
     worker: {
       rtcMinPort: 10000,
       rtcMaxPort: 10100,
@@ -21,7 +21,6 @@ module.exports = {
         // 'svc'
       ]
     },
-    // Router settings
     router: {
       mediaCodecs:
                 [
@@ -49,14 +48,21 @@ module.exports = {
                   }
                 ]
     },
-    // WebRtcTransport settings
+    plainTransport: {
+      listenIp: '127.0.0.1'
+    },
     webRtcTransport: {
-      listenIps: [
-        {
-          ip: '192.168.87.30',
-          announcedIp: null
-        }
-      ]
+      listenIps: []
     }
   }
 };
+
+// ----------------------------------------------------------------------------
+
+const options = { internal: false, ipVersion: 4 };
+
+ni.getInterfaces(options).forEach((iface) => {
+  ni.toIps(iface, options).forEach((ip) => {
+    config.mediasoup.webRtcTransport.listenIps.push({ ip, announcedIp: null });
+  });
+});
