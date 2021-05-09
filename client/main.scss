@@ -1,2 +1,14 @@
+@font-face {
+  font-family: "Droid Sans Mono";
+  src: url("/fonts/droid-sans-mono.ttf") format("truetype");
+  font-weight: normal;
+}
+
 @import "bootstrap";
-@import "preview/preview";
+
+body {
+  font-family: 'Droid Sans Mono';
+  font-size: 22px;
+  color: white;
+  background-color: black;
+}
