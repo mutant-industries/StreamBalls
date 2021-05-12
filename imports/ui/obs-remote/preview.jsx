@@ -2,6 +2,7 @@ import React from 'react';
 import { previewInstance } from "./preview.js";
 import './preview.scss'
 
+
 export const Preview = () => {
 
   previewInstance.on("readyStateChange", (ready) => {
@@ -14,7 +15,7 @@ export const Preview = () => {
   previewInstance.reset();
 
   return (
-    <video id="remote_video"
+    <video id="remote_video" className='ratio-16x9'
            ref={video => { this.video = video }}
            controls
            playsInline

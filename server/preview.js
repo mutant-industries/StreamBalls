@@ -16,6 +16,7 @@ const VIDEO_PT = 96;
 
 let worker;
 let router;
+let ffmpeg;
 const producer = {};
 const clients = [];
 
@@ -242,7 +243,7 @@ async function ffmpegRun(ndiDevice) {
         -f tee 
         "[select=a:f=rtp:ssrc=${AUDIO_SSRC}:payload_type=${AUDIO_PT}]rtp://${ip}:${producer.audioTransport.tuple.localPort}?rtcpport=${producer.audioTransport.rtcpTuple.localPort}|[select=v:f=rtp:ssrc=${VIDEO_SSRC}:payload_type=${VIDEO_PT}]rtp://${ip}:${producer.videoTransport.tuple.localPort}?rtcpport=${producer.videoTransport.rtcpTuple.localPort}"`;
 
-  const ffmpeg = exec(command.replace(/\n|\r/g, ''));
+  ffmpeg = exec(command.replace(/\n|\r/g, ''));
 
   console.log('ffmpeg source:', ndiDevice, 'command:', command);
 
@@ -289,6 +290,10 @@ function ffmpegServiceReset() {
       setTimeout(ffmpegServiceReset, 0);
     });
 }
+
+process.on('exit', () => {
+  ffmpeg && process.kill(-ffmpeg.pid);
+})
 
 // ----------------------------------------------------------------------------
 
