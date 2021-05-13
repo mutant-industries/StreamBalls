@@ -17,36 +17,42 @@ const VIDEO_PT = 96;
 let worker;
 let router;
 let ffmpeg;
+let started;
 const producer = {};
 const clients = [];
 
 // ----------------------------------------------------------------------------
 
 Meteor.startup(async () => {
-  // preview stream ready state
-  if (StateCollection.find({ key: PREVIEW_STREAM_READY_KEY }).count() === 0) {
-    StateCollection.insert({ key: PREVIEW_STREAM_READY_KEY, value: false });
-  }
 
-  // mediasoup worker, router
-  worker = await mediasoup.createWorker({
-    logLevel: config.mediasoup.worker.logLevel,
-    logTags: config.mediasoup.worker.logTags,
-    rtcMinPort: config.mediasoup.worker.rtcMinPort,
-    rtcMaxPort: config.mediasoup.worker.rtcMaxPort
+  started = new Promise(async (resolve) => {
+    // preview stream ready state
+    if (StateCollection.find({ key: PREVIEW_STREAM_READY_KEY }).count() === 0) {
+      StateCollection.insert({ key: PREVIEW_STREAM_READY_KEY, value: false });
+    }
+
+    // mediasoup worker, router
+    worker = await mediasoup.createWorker({
+      logLevel: config.mediasoup.worker.logLevel,
+      logTags: config.mediasoup.worker.logTags,
+      rtcMinPort: config.mediasoup.worker.rtcMinPort,
+      rtcMaxPort: config.mediasoup.worker.rtcMaxPort
+    });
+
+    worker.on('died', () => {
+      console.error('mediasoup worker died, exiting in 2 seconds... [pid:%d]', worker.pid);
+      setTimeout(() => process.exit(1), 2000);
+    });
+
+    const { mediaCodecs } = config.mediasoup.router;
+
+    router = await worker.createRouter({ mediaCodecs });
+
+    // encoder start
+    ffmpegServiceReset();
+
+    resolve();
   });
-
-  worker.on('died', () => {
-    console.error('mediasoup worker died, exiting in 2 seconds... [pid:%d]', worker.pid);
-    setTimeout(() => process.exit(1), 2000);
-  });
-
-  const { mediaCodecs } = config.mediasoup.router;
-
-  router = await worker.createRouter({ mediaCodecs });
-
-  // encoder start
-  ffmpegServiceReset();
 });
 
 Meteor.publish('state', function (key) {
@@ -83,7 +89,9 @@ Meteor.onConnection(function (connection) {
 });
 
 Meteor.methods({
-  getRouterRtpCapabilities() {
+  async getRouterRtpCapabilities() {
+    await started;
+
     return router.rtpCapabilities;
   },
   // --------------------------------
@@ -152,6 +160,10 @@ Meteor.methods({
     Object.values(clients[this.connection.id].consumers).forEach((consumer) => {
       paused ? consumer.pause() : consumer.resume();
     });
+  },
+  resetFfmpegService() {
+    // https://stackoverflow.com/a/48202480
+    ffmpeg && exec(`taskkill -F -T -PID ${ffmpeg.pid}`);
   }
 });
 
@@ -292,7 +304,7 @@ function ffmpegServiceReset() {
 }
 
 process.on('exit', () => {
-  ffmpeg && process.kill(-ffmpeg.pid);
+  ffmpeg && exec(`taskkill -F -T -PID ${ffmpeg.pid}`);
 })
 
 // ----------------------------------------------------------------------------

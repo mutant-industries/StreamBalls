@@ -22,7 +22,8 @@
     },
     "globals": {
         "Meteor": false,
-        "Session": false
+        "Session": false,
+        "Promise": false
     },
     "rules": {
         "react/jsx-filename-extension": 0,

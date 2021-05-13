@@ -28,6 +28,21 @@ export class Reset extends React.Component {
         url: location.origin + FlowRouter.path('/matches/:_id/about', { _id: this.props.matchId }),
         width: 1280
       }});
+
+    this.props.obs.send('GetSourceSettings', { sourceName: CAMERA_SOURCE_NAME })
+      .then((data) => {
+
+        console.log('GetSourceSettings', data);
+
+        this.props.obs.send('SetSourceSettings', {
+          sourceName: CAMERA_SOURCE_NAME,
+          sourceSettings: data.sourceSettings
+        });
+      });
+  }
+
+  handleResetPreviewEncoder() {
+    Meteor.call('resetFfmpegService');
   }
 
   // ------------------------------------------------------------
@@ -42,7 +57,12 @@ export class Reset extends React.Component {
       <button type="button"
               onClick={() => this.handleResetSources()}
               className='btn btn-secondary btn-dark'>
-        reset sources
+        - sources
+      </button>
+      <button type="button"
+              onClick={() => this.handleResetPreviewEncoder()}
+              className='btn btn-secondary btn-dark'>
+        - preview
       </button>
     </div>
   }
