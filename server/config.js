@@ -1,5 +1,3 @@
-const ni = require('network-interfaces');
-
 export const config = {
 
   mediasoup: {
@@ -50,19 +48,6 @@ export const config = {
     },
     plainTransport: {
       listenIp: '127.0.0.1'
-    },
-    webRtcTransport: {
-      listenIps: []
     }
   }
 };
-
-// ----------------------------------------------------------------------------
-
-const options = { internal: false, ipVersion: 4 };
-
-ni.getInterfaces(options).forEach((iface) => {
-  ni.toIps(iface, options).forEach((ip) => {
-    config.mediasoup.webRtcTransport.listenIps.push({ ip, announcedIp: null });
-  });
-});

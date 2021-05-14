@@ -29,7 +29,7 @@ Meteor.methods({
     });
   },
   "match.latest": async () => {
-    return await MatchCollection.findOne({}, {sort: {created: 1}});
+    return await MatchCollection.findOne({}, {sort: {created: -1}});
   },
   "match.edit": async (id, values) => {
     check(id, String);

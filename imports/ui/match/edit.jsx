@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import { MatchCollection } from "/imports/api/match";
+import { FlowRouter } from 'meteor/kadira:flow-router'
 import { useTracker } from 'meteor/react-meteor-data';
+import './edit.scss';
 
 export const Edit = (props) => {
   const [ inputs, setInputs ] = useState({});
@@ -35,7 +37,8 @@ export const Edit = (props) => {
   };
 
   return <div className="center">
-    <form onSubmit={handleMatchEdit}>
+    <a id='match-new' onClick={() => FlowRouter.go('match.new')}/>
+    <form id='match-edit' onSubmit={handleMatchEdit}>
       <input type="text" name="p1" placeholder="player 1" className="form-control" required
              value={ inputs.p1 } onChange={handleInput}/>
       <input type="text" name="p2" placeholder="player 2" className="form-control" required

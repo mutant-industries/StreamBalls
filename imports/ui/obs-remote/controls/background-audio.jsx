@@ -26,17 +26,17 @@ export class BackgroundAudio extends React.Component {
       <button type="button"
               onClick={() => this.previousTrack()}
               className='btn btn-secondary btn-dark'>
-        &#x23EE;
+        <img src={`/icons/media-prev.png`} className='b-crossfade' alt='stream'/>
       </button>
       <button type="button"
               onClick={() => this.togglePlay()}
               className='btn btn-secondary btn-dark'>
-        { this.props.backgroundAudioPlaying ? '\u23F8' : '\u23F5' }
+        <img src={`/icons/media-${this.props.backgroundAudioPlaying ? 'pause' : 'play'}.png`} className='b-crossfade' alt='stream'/>
       </button>
       <button type="button"
               onClick={() => this.nextTrack()}
               className='btn btn-secondary btn-dark'>
-        &#x23ED;
+        <img src={`/icons/media-next.png`} className='b-crossfade' alt='stream'/>
       </button>
     </div>
   }

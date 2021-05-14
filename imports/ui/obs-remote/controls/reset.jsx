@@ -6,8 +6,17 @@ import { ABOUT_SOURCE_NAME, BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, ST
 export class Reset extends React.Component {
 
   handleResetToDefault() {
-    this.props.obs.send('StopStreaming');
-    this.props.obs.send('StopRecording');
+    this.props.obs.send('StopStreaming').catch((e) => {
+      if (e.error !== 'streaming not active') {
+        throw e;
+      }
+    });
+    this.props.obs.send('StopRecording').catch((e) => {
+      if (e.error !== 'recording not active') {
+        throw e;
+      }
+    });
+
     this.props.obs.send('StopMedia', { sourceName: BACKGROUND_AUDIO_SOURCE_NAME });
     this.props.obs.send('SetVolume', { source: BACKGROUND_AUDIO_SOURCE_NAME, volume: 0 });
     this.props.obs.send('SetMute', { source: BACKGROUND_AUDIO_SOURCE_NAME, mute: false });
@@ -29,20 +38,16 @@ export class Reset extends React.Component {
         width: 1280
       }});
 
+    this.props.obs.send('RefreshBrowserSource', { sourceName: ABOUT_SOURCE_NAME });
+
     this.props.obs.send('GetSourceSettings', { sourceName: CAMERA_SOURCE_NAME })
       .then((data) => {
-
-        console.log('GetSourceSettings', data);
 
         this.props.obs.send('SetSourceSettings', {
           sourceName: CAMERA_SOURCE_NAME,
           sourceSettings: data.sourceSettings
         });
       });
-  }
-
-  handleResetPreviewEncoder() {
-    Meteor.call('resetFfmpegService');
   }
 
   // ------------------------------------------------------------
@@ -52,17 +57,12 @@ export class Reset extends React.Component {
       <button type="button"
              onClick={() => this.handleResetToDefault()}
               className='btn btn-secondary btn-dark'>
-        reset
+        <img src={`/icons/reset.png`} className='b-crossfade' alt='stream'/>
       </button>
       <button type="button"
               onClick={() => this.handleResetSources()}
-              className='btn btn-secondary btn-dark'>
-        - sources
-      </button>
-      <button type="button"
-              onClick={() => this.handleResetPreviewEncoder()}
-              className='btn btn-secondary btn-dark'>
-        - preview
+              className='btn btn-secondary btn-dark reset-sources'>
+        <img src={`/icons/reset-sources.png`} className='b-crossfade' alt='stream'/>
       </button>
     </div>
   }

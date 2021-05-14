@@ -12,7 +12,7 @@ export class SceneList extends React.Component {
   // ------------------------------------------------------------
 
   render() {
-    return <div>
+    return <div className='scene-list'>
       { this.props.sceneList.map((scene, index) => (
         <button type="button"
                onClick={this.handleSceneChange}

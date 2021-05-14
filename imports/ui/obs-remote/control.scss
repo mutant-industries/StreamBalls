@@ -1,3 +1,113 @@
+.b-crossfade {
+  height: 21px;
+}
+
+.reset-sources {
+  padding: 2px 6px;
+
+  .b-crossfade {
+    height: 31px;
+  }
+}
+
+.stream {
+  padding: 2px 10px;
+
+  .b-crossfade {
+    height: 26px;
+  }
+}
+
+.controls {
+  position: relative;
+
+  .overlay {
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    right: 3px;
+    bottom: 3px;
+    z-index: 9999999;
+    background-color: rgba(10, 10, 10, 0.7);
+  }
+
+  .scene-list .btn {
+    font-weight: bold;
+  }
+}
+
 .statusbar {
-  font-size: 16px;
+  font-size: 14px;
+
+  .status {
+    margin: 0 5px;
+  }
+
+  .connection {
+    cursor: pointer;
+
+    .connection-status {
+      width: 21px;
+      height: 21px;
+      display: inline-block;
+      background-size: contain;
+      vertical-align: bottom;
+
+      &.obs-connected {
+        background-image: url('/icons/obs-connected.png');
+      }
+
+      &.obs-unreachable {
+        background-image: url('/icons/obs-unreachable.png');
+      }
+    }
+
+    .settings-status {
+      width: 21px;
+      height: 21px;
+      display: inline-block;
+      background-size: contain;
+      vertical-align: bottom;
+
+      &.settings-valid {
+        background-image: url('/icons/settings-valid.png');
+      }
+
+      &.settings-invalid {
+        background-image: url('/icons/settings-invalid.png');
+      }
+    }
+  }
+
+  .output-status-icon {
+    width: 32px;
+    height: 21px;
+    display: inline-block;
+    background-size: cover;
+    vertical-align: bottom;
+
+    &.no-output {
+      background-image: url('/icons/status-no-output.png');
+    }
+
+    &.rec {
+      background-image: url('/icons/status-rec.png');
+    }
+
+    &.rec-paused {
+      background-image: url('/icons/status-rec-paused.png');
+    }
+
+    &.stream {
+      background-image: url('/icons/status-stream.png');
+    }
+
+    &.stream-rec {
+      background-image: url('/icons/status-stream-rec.png');
+    }
+
+    &.stream-rec-paused {
+      background-image: url('/icons/status-stream-rec-paused.png');
+    }
+  }
 }

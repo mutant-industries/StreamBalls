@@ -3,6 +3,7 @@ import { check } from 'meteor/check';
 import { StateCollection, PREVIEW_STREAM_READY_KEY } from '/imports/api/state';
 import { config } from './config';
 
+const ni = require('network-interfaces');
 const mediasoup = require('mediasoup');
 const { exec } = require('child_process');
 const grandiose = require('grandiose');
@@ -310,8 +311,18 @@ process.on('exit', () => {
 // ----------------------------------------------------------------------------
 
 async function createWebRtcTransport() {
+
+  const listenIps = [];
+  const niOptions = { internal: false, ipVersion: 4 };
+
+  ni.getInterfaces(niOptions).forEach((iface) => {
+    ni.toIps(iface, niOptions).forEach((ip) => {
+      listenIps.push({ ip, announcedIp: null });
+    });
+  });
+
   return router.createWebRtcTransport({
-    listenIps: config.mediasoup.webRtcTransport.listenIps,
+    listenIps,
     enableUdp: true,
     enableTcp: true,
     preferUdp: true

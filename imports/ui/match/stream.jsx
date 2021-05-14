@@ -6,7 +6,7 @@ import './stream.scss';
 
 export const Stream = (props) => {
 
-  return <div className="stream">
+  return <div className="stream-wrapper">
     <Preview/>
     <Edit matchId={props.matchId}/>
     <Control matchId={props.matchId}/>

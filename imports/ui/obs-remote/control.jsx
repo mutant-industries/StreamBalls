@@ -12,8 +12,7 @@ import { SceneList } from './controls/scene-list.jsx';
 import { Audio } from './status/audio.jsx';
 import { Connection } from './status/connection.jsx';
 import { Encoder } from './status/encoder.jsx';
-import { Recording } from './status/recording.jsx';
-import { Streaming } from './status/streaming.jsx';
+import { OutputStatus } from './status/output-status.jsx';
 
 // ----------------------------------------------------------------------------
 
@@ -82,6 +81,50 @@ export class Control extends React.Component {
   }
 
   // ------------------------------------------------------------
+
+  obsValidateSettings() {
+
+    this.setState({ settingsValid: true });
+
+    this.obs.send('GetSceneList').then((data) => {
+
+      const expectedScenes = [START_SCENE_NAME];
+      let expectedScenesNo = expectedScenes.length;
+
+      data.scenes.forEach(value => {
+        if (expectedScenes.indexOf(value.name) !== -1) {
+          expectedScenesNo--;
+        }
+      });
+
+      this.setState({
+        currentScene: data.currentScene,
+        sceneList: data.scenes,
+        settingsValid: this.state.settingsValid && expectedScenesNo === 0
+      });
+
+      if (expectedScenesNo) {
+        console.error(`One of expected scenes (${expectedScenes.join(', ')}) was not found.`, data.scenes);
+      }
+    });
+
+    this.obs.send('GetSourcesList').then((data) => {
+      const expectedSources = [BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, ABOUT_SOURCE_NAME];
+      let expectedSourcesNo = expectedSources.length;
+
+      data.sources.forEach(value => {
+        if (expectedSources.indexOf(value.name) !== -1) {
+          expectedSourcesNo--;
+        }
+      });
+
+      this.setState({ settingsValid: this.state.settingsValid && expectedSourcesNo === 0 });
+
+      if (expectedSourcesNo) {
+        console.error(`One of expected sources (${expectedSources.join(', ')}) was not found.`, data.sources);
+      }
+    });
+  }
 
   obsConnectionReset() {
     const instance = this;
@@ -274,22 +317,12 @@ export class Control extends React.Component {
           this.updateBackgroundAudioStateTimeout = setTimeout(updateBackgroundAudioState, 1500);
         });
 
-        this.obs.send('GetSceneList').then((data) => {
+        this.obs.on('ScenesChanged', () => this.obsValidateSettings());
+        this.obs.on('SceneItemAdded', () => this.obsValidateSettings());
+        this.obs.on('SceneItemRemoved', () => this.obsValidateSettings());
+        this.obs.on('SourceRenamed', () => this.obsValidateSettings());
 
-          let expectedScenesNo = 1;
-
-          data.scenes.forEach(value => {
-            if ([START_SCENE_NAME].indexOf(value.name) !== -1) {
-              expectedScenesNo--;
-            }
-          });
-
-          this.setState({
-            currentScene: data.currentScene,
-            sceneList: data.scenes,
-            settingsValid: this.state.settingsValid && expectedScenesNo === 0
-          });
-        });
+        this.obsValidateSettings();
 
         // ----------------------------------------------
         // --- transition events
@@ -327,21 +360,6 @@ export class Control extends React.Component {
           }).catch((e) => {
             console.error(`GetVolume ${CAMERA_SOURCE_NAME} error`, e);
           });
-
-        // ----------------------------------------------
-        // --- OBS configuration check
-
-        this.obs.send('GetSourcesList').then((data) => {
-          let expectedSourcesNo = 3;
-
-          data.sources.forEach(value => {
-            if ([BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, ABOUT_SOURCE_NAME].indexOf(value.name) !== -1) {
-              expectedSourcesNo--;
-            }
-          });
-
-          this.setState({ settingsValid: this.state.settingsValid && expectedSourcesNo === 0 });
-        });
 
         // ----------------------------------------------
 
@@ -389,8 +407,8 @@ export class Control extends React.Component {
   render() {
     return <div className='fixed-bottom'>
       <div className='container'>
-        {/*TODO spis overlay nez d-none, buttony mozna ne fixed dole*/}
-        <div className={ this.state.connected ? '' : 'd-none' }>
+        <div className='controls'>
+          <div className={ 'overlay' + (this.state.connected ? ' d-none' : '') }/>
           <Reset obs={this.obs}
                  matchId={this.props.matchId}/>
           <Output obs={this.obs}
@@ -425,18 +443,19 @@ export class Control extends React.Component {
                    memoryUsage={this.state.memoryUsage}/>
           <Audio backgroundAudioLevel={this.state.backgroundAudioLevel}
                  cameraAudioLevel={this.state.cameraAudioLevel}/>
-          <Streaming streaming={this.state.streaming}
-                     streamingStarting={this.state.streamingStarting}
-                     streamingStopping={this.state.streamingStopping}
-                     kbitsPerSec={this.state.kbitsPerSec}
-                     numDroppedFrames={this.state.numDroppedFrames}
-                     numTotalFrames={this.state.numTotalFrames}
-                     streamTimecode={this.state.streamTimecode}/>
-          <Recording recording={this.state.recording}
-                     recordingStarting={this.state.recordingStarting}
-                     recordingStopping={this.state.recordingStopping}
-                     recordingPaused={this.state.recordingPaused}
-                     recordTimecode={this.state.recordTimecode}/>
+          <OutputStatus streaming={this.state.streaming}
+                        streamingStarting={this.state.streamingStarting}
+                        streamingStopping={this.state.streamingStopping}
+                        kbitsPerSec={this.state.kbitsPerSec}
+                        numDroppedFrames={this.state.numDroppedFrames}
+                        numTotalFrames={this.state.numTotalFrames}
+                        streamTimecode={this.state.streamTimecode}
+                        recording={this.state.recording}
+                        recordingStarting={this.state.recordingStarting}
+                        recordingStopping={this.state.recordingStopping}
+                        recordingPaused={this.state.recordingPaused}
+                        recordTimecode={this.state.recordTimecode}/>
+          <div className="clearfix"/>
         </div>
       </div>
     </div>

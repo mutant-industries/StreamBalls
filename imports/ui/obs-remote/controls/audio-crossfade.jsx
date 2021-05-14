@@ -87,7 +87,7 @@ export class AudioCrossfade extends React.Component {
       <button type="button"
               onClick={() => this.handleClick()}
               className='btn btn-secondary btn-dark'>
-        crossfade
+        <img src='/icons/crossfade.png' className='b-crossfade' alt='crossfade'/>
       </button>
     </div>
   }

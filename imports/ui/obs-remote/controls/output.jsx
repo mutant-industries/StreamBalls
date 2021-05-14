@@ -19,14 +19,14 @@ export class Output extends React.Component {
       <button type="button"
               onClick={() => this.toggleStreaming()}
               disabled={ this.props.streamingStarting || this.props.streamingStopping }
-              className='btn btn-secondary btn-dark'>
-        { this.props.streaming ? 'stop streaming' : 'stream' }
+              className={`btn stream btn-secondary ${this.props.streaming ? 'btn-light' : 'btn-dark'}`}>
+        <img src={`/icons/go-live${this.props.streaming ? '-active' : ''}.png`} className='b-crossfade' alt='stream'/>
       </button>
       <button type="button"
               onClick={() => this.toggleRecording()}
               disabled={ this.props.recordingStarting || this.props.recordingStopping }
-              className='btn btn-secondary btn-dark'>
-        { this.props.recording ? 'stop recording' : 'record' }
+              className={`btn btn-secondary ${this.props.recording ? 'btn-light' : 'btn-dark'}`}>
+        <img src={`/icons/record${this.props.recording ? '-active' : ''}.png`} className='b-crossfade' alt='stream'/>
       </button>
     </div>
   }
