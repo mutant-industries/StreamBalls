@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlowRouter } from 'meteor/kadira:flow-router'
-import { ABOUT_SOURCE_NAME, BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, START_SCENE_NAME } from "../control.jsx";
+import { TEXT_SOURCE_NAME, BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, START_SCENE_NAME } from "../control.jsx";
 
 
 export class Reset extends React.Component {
@@ -28,17 +28,17 @@ export class Reset extends React.Component {
   }
 
   handleResetSources() {
-    this.props.obs.send('SetSourceSettings', { sourceName: ABOUT_SOURCE_NAME, sourceSettings: {
+    this.props.obs.send('SetSourceSettings', { sourceName: TEXT_SOURCE_NAME, sourceSettings: {
         css: "body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }",
         fps_custom: false,
         is_local_file: false,
         shutdown: false,
         // TODO jebator
-        url: location.origin + FlowRouter.path('/matches/:_id/about', { _id: this.props.matchId }),
+        url: location.origin + FlowRouter.path('/matches/:_id/text', { _id: this.props.match._id }),
         width: 1280
       }});
 
-    this.props.obs.send('RefreshBrowserSource', { sourceName: ABOUT_SOURCE_NAME });
+    this.props.obs.send('RefreshBrowserSource', { sourceName: TEXT_SOURCE_NAME });
 
     this.props.obs.send('GetSourceSettings', { sourceName: CAMERA_SOURCE_NAME })
       .then((data) => {
@@ -48,6 +48,11 @@ export class Reset extends React.Component {
           sourceSettings: data.sourceSettings
         });
       });
+
+    const stats = this.props.match.stats || {};
+    stats.visible = false;
+
+    Meteor.call('match.edit', this.props.match._id, { stats });
   }
 
   // ------------------------------------------------------------
@@ -55,11 +60,13 @@ export class Reset extends React.Component {
   render() {
     return <div className="btn-group m-1" role="group">
       <button type="button"
-             onClick={() => this.handleResetToDefault()}
+              onClick={() => this.handleResetToDefault()}
+              disabled={ ! this.props.match}
               className='btn btn-secondary btn-dark'>
         <img src={`/icons/reset.png`} className='b-crossfade' alt='stream'/>
       </button>
       <button type="button"
+              disabled={ ! this.props.match}
               onClick={() => this.handleResetSources()}
               className='btn btn-secondary btn-dark reset-sources'>
         <img src={`/icons/reset-sources.png`} className='b-crossfade' alt='stream'/>

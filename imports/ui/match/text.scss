@@ -1,0 +1,119 @@
+#text {
+  position: relative;
+  padding: 60px 0 0 0;
+
+  .content {
+    position: absolute;
+    left:0;
+    right:0;
+    margin-left:auto;
+    margin-right:auto;
+
+    &.about {
+      width: 696px;
+
+      .event_competition {
+        font-size: 36px;
+        font-weight: bold;
+      }
+
+      .event_label {
+        font-size: 26px;
+        font-style: italic;
+      }
+
+      .player {
+        font-size: 28px;
+      }
+
+      .against {
+        font-size: 22px;
+        margin: 17px 0;
+      }
+
+      &.hidden {
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 0s 1s, opacity 1s ease-out;
+      }
+
+      &.visible {
+        visibility: visible;
+        opacity: 0.9;
+        transition: opacity 1s ease-in;
+      }
+    }
+
+    &.stats {
+    width: 1000px;
+
+      .results {
+        width: 100%;
+
+        td {
+          padding: 5px 15px;
+          text-align: center;
+        }
+
+        .score {
+          font-size: 28px;
+
+          td {
+            padding-bottom: 20px;
+          }
+
+          .player {
+            width: 44%;
+            font-weight: bold;
+          }
+        }
+
+        .set {
+          font-size: 14px;
+
+          &.header {
+
+            .bar {
+              background-size: contain;
+              background-repeat: no-repeat;
+              background-position: center;
+              height: 41px;
+            }
+
+            .three-bar {
+              background-image: url('/icons/three-bar.png');
+            }
+
+            .five-bar {
+              background-image: url('/icons/five-bar.png');
+            }
+
+            .two-bar {
+              background-image: url('/icons/two-bar.png');
+            }
+          }
+
+          &.label {
+            font-style: italic;
+          }
+        }
+
+        .footnote {
+          font-size: 12px;
+        }
+      }
+
+      &.hidden {
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 0s 1s, opacity 1s ease-out;
+      }
+
+      &.visible {
+        visibility: visible;
+        opacity: 0.9;
+        transition: opacity 1s ease-in;
+      }
+    }
+  }
+}

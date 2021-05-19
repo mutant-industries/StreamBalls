@@ -4,7 +4,7 @@ import { FlowRouter } from 'meteor/kadira:flow-router'
 import { mount } from 'react-mounter'
 
 import { App } from '/imports/ui/app'
-import { About } from "/imports/ui/match/about.jsx";
+import { Text } from "/imports/ui/match/text.jsx";
 import { Stream } from "/imports/ui/match/stream.jsx";
 
 FlowRouter.route('/', {
@@ -34,11 +34,11 @@ FlowRouter.route('/matches/:_id/stream', {
   }
 })
 
-FlowRouter.route('/matches/:_id/about', {
-  name: 'match.about',
+FlowRouter.route('/matches/:_id/text', {
+  name: 'match.text',
   action(params) {
     mount(App, {
-      content: <About matchId={params._id}/>
+      content: <Text matchId={params._id}/>
     })
   }
 })

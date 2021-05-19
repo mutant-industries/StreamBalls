@@ -34,9 +34,10 @@ Meteor.methods({
   "match.edit": async (id, values) => {
     check(id, String);
     check(values, Object);
-    check(values.p1, String);
-    check(values.p2, String);
-    check(values.label, String);
+    // check(values.p1, String);
+    // check(values.p2, String);
+    // check(values.label, String);
+    // check(values.stats, Object);
 
     delete values._id;
 

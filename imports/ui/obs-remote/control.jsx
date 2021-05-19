@@ -8,6 +8,7 @@ import { BackgroundAudio } from './controls/background-audio.jsx';
 import { Output } from './controls/output.jsx';
 import { Reset } from './controls/reset.jsx';
 import { SceneList } from './controls/scene-list.jsx';
+import { Stats } from './controls/stats.jsx';
 // statusbar
 import { Audio } from './status/audio.jsx';
 import { Connection } from './status/connection.jsx';
@@ -22,10 +23,10 @@ const ZERO_TIMECODE = '00:00:00';
 
 export const BACKGROUND_AUDIO_SOURCE_NAME = 'background audio';
 export const CAMERA_SOURCE_NAME = 'OBS camera';
-export const ABOUT_SOURCE_NAME = 'about';
+export const TEXT_SOURCE_NAME = 'text';
 export const START_SCENE_NAME = 'start';
 
-export const BACKGROUND_AUDIO_MAX_VOLUME = 0.7; // * 100 [%]
+export const BACKGROUND_AUDIO_MAX_VOLUME = 0.6; // * 100 [%]
 
 const DEFAULT_STATE = {
   connected: false,
@@ -109,7 +110,7 @@ export class Control extends React.Component {
     });
 
     this.obs.send('GetSourcesList').then((data) => {
-      const expectedSources = [BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, ABOUT_SOURCE_NAME];
+      const expectedSources = [BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, TEXT_SOURCE_NAME];
       let expectedSourcesNo = expectedSources.length;
 
       data.sources.forEach(value => {
@@ -410,7 +411,7 @@ export class Control extends React.Component {
         <div className='controls'>
           <div className={ 'overlay' + (this.state.connected ? ' d-none' : '') }/>
           <Reset obs={this.obs}
-                 matchId={this.props.matchId}/>
+                 match={this.props.match}/>
           <Output obs={this.obs}
                   streaming={this.state.streaming}
                   streamingStarting={this.state.streamingStarting}
@@ -424,6 +425,8 @@ export class Control extends React.Component {
           <AudioCrossfade obs={this.obs}
                           backgroundAudioLevel={this.state.backgroundAudioLevel}
                           cameraAudioLevel={this.state.cameraAudioLevel}/>
+          <Stats obs={this.obs}
+                 match={this.props.match}/>
           <SceneList obs={this.obs}
                      currentScene={this.state.currentScene}
                      transitionRunning={this.state.transitionRunning}
