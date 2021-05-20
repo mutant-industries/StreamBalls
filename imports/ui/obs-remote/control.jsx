@@ -135,7 +135,7 @@ export class Control extends React.Component {
 
     this.setState(DEFAULT_STATE);
 
-    this.obs.connect({ address: 'smallballs.local:4444', password: 'soboss' })
+    this.obs.connect({ address: `${location.hostname}:4444`, password: 'soboss' })
       .then(() => {
 
         this.setState({ connected: true });

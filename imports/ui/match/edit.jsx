@@ -196,12 +196,14 @@ export const Edit = (props) => {
   return <div className="center">
     <a id='match-new' onClick={() => FlowRouter.go('match.new')}/>
     <form id='match-edit' onSubmit={handleMatchEdit}>
-      <input type="text" name="p1" placeholder="player 1" className="form-control" required
-             value={ inputs.p1 } onChange={handleInput}/>
-      <input type="text" name="p2" placeholder="player 2" className="form-control" required
-             value={ inputs.p2 } onChange={handleInput}/>
-      <input type="text" name="label" placeholder="last xx" className="form-control" required
+      <input type="text" name="competition" placeholder="Competition" className="form-control" required
+             value={ inputs.competition } onChange={handleInput}/>
+      <input type="text" name="label" placeholder="date / last xx" className="form-control" required
              value={ inputs.label } onChange={handleInput}/>
+      <input type="text" name="p1" placeholder="Player 1" className="form-control player" required
+             value={ inputs.p1 } onChange={handleInput}/>
+      <input type="text" name="p2" placeholder="Player 2" className="form-control player" required
+             value={ inputs.p2 } onChange={handleInput}/>
       <button type="submit" className="d-none">submit</button>
     </form>
     <KeyboardEventHandler onKeyEvent={(key, e) => handleStatsInput(key, e)} handleKeys={[

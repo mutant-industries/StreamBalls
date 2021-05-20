@@ -11,6 +11,11 @@
 
 #match-edit {
   display: flow-root;
+
+  .player {
+    width: 50%;
+    display: inline-block;
+  }
 }
 
 #stats-control {
