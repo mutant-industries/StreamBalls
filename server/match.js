@@ -5,7 +5,7 @@ import { check } from "meteor/check";
 Meteor.startup(() => {
   if (MatchCollection.find().count() === 0) {
     MatchCollection.insert({
-      competition: '2BLbee SmallBalls Multitable',
+      competition: '2BLbee Sranda Match',
       p1: 'František (L - red)',
       p2: 'Petr (L - black)',
       label: 'last 32',
@@ -23,7 +23,7 @@ Meteor.publish('match', function (_id) {
 Meteor.methods({
   "match.new": async () => {
     return await MatchCollection.insert({
-      competition: '2BLbee SmallBalls Multitable',
+      competition: '',
       p1: '', p2: '', label: '',
       created: new Date()
     });

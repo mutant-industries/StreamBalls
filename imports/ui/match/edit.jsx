@@ -12,9 +12,12 @@ export const Edit = (props) => {
     return 'wait';
   }
 
-  // initial form state
-  if (Object.keys(inputs).length === 0) {
-    setInputs(props.match)
+  const newMatchCreated = inputs._id && inputs._id !== props.match._id;
+
+  // initial form state (on page loaded / on new match created)
+  if (Object.keys(inputs).length === 0 || newMatchCreated) {
+    // on new match created - keep form prefilled with player names and competition name from previous match
+    setInputs(newMatchCreated ? { ...props.match, p1: inputs.p1, p2: inputs.p2, competition: inputs.competition } : props.match)
   }
 
   // --------------------------------------------------------
