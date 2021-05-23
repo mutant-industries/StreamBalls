@@ -1,3 +1,5 @@
+import { Meteor } from 'meteor/meteor';
+import { Tracker } from 'meteor/tracker'
 import React from 'react';
 import { previewInstance } from "./preview.js";
 import './preview.scss'
@@ -5,18 +7,31 @@ import './preview.scss'
 export class Preview extends React.Component {
 
   componentDidMount() {
+    const instance = this;
+
+    // DDP client connected status
+    this.connected = false;
+    this.stateTracker = null;
+
     previewInstance.on("readyStateChange", (ready) => {
       if (ready) {
         this.video.srcObject = previewInstance.getStream();
       }
     });
 
-    // reset and wait for ready
-    previewInstance.reset();
+    this.stateTracker = Tracker.autorun(() => {
+      // workaround, DDP.onReconnect() cannot be unregistered
+      if ( ! instance.connected && Meteor.status().connected) {
+        // reset and wait for ready
+        previewInstance.reset();
+      }
+
+      instance.connected = Meteor.status().connected;
+    });
   }
 
   componentWillUnmount() {
-    clearInterval(this.updateInterval);
+    this.stateTracker.stop();
   }
 
   shouldComponentUpdate() {
