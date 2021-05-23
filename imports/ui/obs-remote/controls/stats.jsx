@@ -20,7 +20,7 @@ export class Stats extends React.Component {
               onClick={() => this.toggleVisible()}
               disabled={ ! this.props.match}
               className={`btn btn-secondary ${statsVisible ? 'btn-light' : 'btn-dark'}`}>
-        <img src={`/icons/stats${statsVisible ? '-active' : ''}.png`} className='b-crossfade' alt='stream'/>
+        <img src={`/icons/stats${statsVisible ? '-active' : ''}.png`} className='b-crossfade' alt='stats'/>
       </button>
     </div>
   }

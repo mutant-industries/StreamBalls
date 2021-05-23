@@ -27,6 +27,22 @@ export class Reset extends React.Component {
     this.handleResetSources();
   }
 
+  handleStreamingKeyChange() {
+
+    const newStreamingKey = prompt('Streaming key:');
+
+    if ( ! newStreamingKey) {
+      return;
+    }
+
+    this.props.obs.send('SetStreamSettings', {
+      save: true,
+      settings: {
+        key: newStreamingKey
+      }
+    });
+  }
+
   handleResetSources() {
     this.props.obs.send('SetSourceSettings', { sourceName: TEXT_SOURCE_NAME, sourceSettings: {
         css: "body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }",
@@ -63,13 +79,18 @@ export class Reset extends React.Component {
               onClick={() => this.handleResetToDefault()}
               disabled={ ! this.props.match}
               className='btn btn-secondary btn-dark'>
-        <img src={`/icons/reset.png`} className='b-crossfade' alt='stream'/>
+        <img src={`/icons/reset.png`} className='b-crossfade' alt='reset'/>
+      </button>
+      <button type="button"
+              onClick={() => this.handleStreamingKeyChange()}
+              className='btn btn-secondary btn-dark'>
+        <img src={`/icons/streaming-key.png`} className='b-crossfade' alt='streaming-key'/>
       </button>
       <button type="button"
               disabled={ ! this.props.match}
               onClick={() => this.handleResetSources()}
               className='btn btn-secondary btn-dark reset-sources'>
-        <img src={`/icons/reset-sources.png`} className='b-crossfade' alt='stream'/>
+        <img src={`/icons/reset-sources.png`} className='b-crossfade' alt='reset-sources'/>
       </button>
     </div>
   }
