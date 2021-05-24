@@ -1,9 +1,9 @@
 import assert from 'assert';
 
-describe('play-react', function () {
+describe('streamballs', function () {
   it('package.json has correct name', async function () {
     const { name } = await import('../package.json');
-    assert.strictEqual(name, 'play-react');
+    assert.strictEqual(name, 'streamballs');
   });
 
   if (Meteor.isClient) {

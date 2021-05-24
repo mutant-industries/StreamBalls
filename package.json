@@ -1,5 +1,5 @@
 {
-  "name": "play-react",
+  "name": "streamballs",
   "private": true,
   "scripts": {
     "start": "meteor run",

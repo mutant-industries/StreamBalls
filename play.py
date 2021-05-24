@@ -4,12 +4,12 @@ import subprocess
 import os
 import threading
 
-play = None
+server = None
 
 # -------------------------------------------------------------------
 
 def script_description():
-  return "Play-react autostart script."
+  return "StreamBalls autostart script."
 
 # -------------------------------------------------------------------
 # https://eli.thegreenplace.net/2017/interacting-with-a-long-running-child-process-in-python
@@ -23,17 +23,17 @@ def output_reader(proc):
 
 def script_load(settings):
     
-    global play
+    global server
 
     modified_env = os.environ.copy()
 
-    modified_env["MONGO_URL"] = "mongodb://localhost:27017/play-react"
+    modified_env["MONGO_URL"] = "mongodb://localhost:27017/streamballs"
     modified_env["ROOT_URL"] = "http://smallballs.local"
     modified_env["PORT"] = "3000"
     modified_env["NODE_ENV"] = "production"
 
     # subprocess.CREATE_NO_WINDOW ~ 0x08000000 - no console visible after started
-    play = subprocess.Popen(['node.exe', 'main.js'],
+    server = subprocess.Popen(['node.exe', 'main.js'],
         bufsize=16,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -42,14 +42,14 @@ def script_load(settings):
         creationflags=0x08000000,
         env=modified_env)
 
-    reader = threading.Thread(target=output_reader, args=(play,))
+    reader = threading.Thread(target=output_reader, args=(server,))
     reader.daemon = True  # thread dies with the program
     reader.start()
 
-    print('Play-react started')
+    print('StreamBalls started')
 
 def script_unload():
     # https://stackoverflow.com/a/47756757
-    print('Play-react process tree shall be terminated')
+    print('StreamBalls process tree shall be terminated')
 
-    subprocess.run(['taskkill.exe', '-F', '-T', '-PID', str(play.pid)], creationflags=0x08000000)
+    subprocess.run(['taskkill.exe', '-F', '-T', '-PID', str(server.pid)], creationflags=0x08000000)
