@@ -307,7 +307,6 @@ export const Edit = (props) => {
 
         <div className='stats-log'
              onClick={ () => { $('.stats-log').empty() }}/>
-        <div className='clearfix'/>
       </div>
     </KeyboardEventHandler>
   </div>;
