@@ -38,7 +38,7 @@ export const Edit = (props) => {
   const stats = props.match.stats || {};
   stats.events = stats.events || [];
 
-  // TODO trochu dementni, ale co uz
+  // TODO trochu dementni (kazda tyc ma jen 3 event typy), ale co uz
   const summary = {
     left: { bar: [ [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ] ], own: 0 },
     right: { bar: [ [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ] ], own: 0 }

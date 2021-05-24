@@ -25,6 +25,13 @@ export class Reset extends React.Component {
     this.props.obs.send('SetCurrentScene', { "scene-name": START_SCENE_NAME });
 
     this.handleResetSources();
+
+    this.props.obs.send('RefreshBrowserSource', { sourceName: TEXT_SOURCE_NAME });
+
+    const stats = this.props.match.stats || {};
+    stats.visible = false;
+
+    Meteor.call('match.edit', this.props.match._id, { stats });
   }
 
   handleStreamingKeyChange() {
@@ -49,12 +56,9 @@ export class Reset extends React.Component {
         fps_custom: false,
         is_local_file: false,
         shutdown: false,
-        // TODO jebator
         url: location.origin + FlowRouter.path('/matches/:_id/text', { _id: this.props.match._id }),
         width: 1280
       }});
-
-    this.props.obs.send('RefreshBrowserSource', { sourceName: TEXT_SOURCE_NAME });
 
     this.props.obs.send('GetSourceSettings', { sourceName: CAMERA_SOURCE_NAME })
       .then((data) => {
@@ -64,11 +68,6 @@ export class Reset extends React.Component {
           sourceSettings: data.sourceSettings
         });
       });
-
-    const stats = this.props.match.stats || {};
-    stats.visible = false;
-
-    Meteor.call('match.edit', this.props.match._id, { stats });
   }
 
   // ------------------------------------------------------------

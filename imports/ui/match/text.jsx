@@ -15,7 +15,7 @@ export const Text = (props) => {
   });
 
   if ( ! match) {
-    return 'wait';
+    return '';
   }
 
   // --------------------------------------------------------
