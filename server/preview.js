@@ -5,7 +5,7 @@ import { config } from './config';
 
 const ni = require('network-interfaces');
 const mediasoup = require('mediasoup');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const grandiose = require('grandiose');
 
 // ----------------------------------------------------------------------------
@@ -164,7 +164,7 @@ Meteor.methods({
   },
   resetFfmpegService() {
     // https://stackoverflow.com/a/48202480
-    ffmpeg && exec(`taskkill -F -T -PID ${ffmpeg.pid}`);
+    ffmpeg && ffmpeg.kill('SIGKILL');
   }
 });
 
@@ -240,36 +240,42 @@ async function ffmpegRun(ndiDevice) {
 
   const ip = config.mediasoup.plainTransport.listenIp;
 
-  const command = `ffmpeg -hide_banner 
-        -init_hw_device qsv=hw -hwaccel qsv 
-        -f libndi_newtek 
-        -i "${ndiDevice.name}"
-        -map 0:a:0 
-        -c:a libopus -b:a 12k -vbr off 
-        -application lowdelay -frame_duration 20 -apply_phase_inv false 
-        -map 0:v:0 
-        -c:v h264_qsv 
-        -vf vpp_qsv=w=iw/2:h=ih/2 
-        -r 30 -g 60 
-        -b:v 1400K -minrate 1400K -maxrate 1400K -bufsize 50 
-        -preset veryfast -profile:v baseline -look_ahead 0 
-        -f tee 
-        "[select=a:f=rtp:ssrc=${AUDIO_SSRC}:payload_type=${AUDIO_PT}]rtp://${ip}:${producer.audioTransport.tuple.localPort}?rtcpport=${producer.audioTransport.rtcpTuple.localPort}|[select=v:f=rtp:ssrc=${VIDEO_SSRC}:payload_type=${VIDEO_PT}]rtp://${ip}:${producer.videoTransport.tuple.localPort}?rtcpport=${producer.videoTransport.rtcpTuple.localPort}"`;
+  ffmpeg = spawn(`ffmpeg`, [`-hide_banner`,
+    `-init_hw_device`, `qsv=hw`, `-hwaccel`, `qsv`,
+    `-f`, `libndi_newtek`,
+    `-i`, `${ndiDevice.name}`,
+    `-map`, `0:a:0`,
+    `-c:a`, `libopus`, `-b:a`, `12k`, `-vbr`, `off`,
+    `-application`, `lowdelay`, `-frame_duration`, `20`, `-apply_phase_inv`, `false`,
+    `-map`, `0:v:0`,
+    `-c:v`, `h264_qsv`,
+    `-vf`, `vpp_qsv=w=iw/2:h=ih/2`,
+    `-r`, `30`, `-g`, `60`,
+    `-b:v`, `1400K`, `-minrate`, `1400K`, `-maxrate`, `1400K`, `-bufsize`, `50`,
+    `-preset`, `veryfast`, `-profile:v`, `baseline`, `-look_ahead`, `0`,
+    `-f`, `tee`,
+    `[select=a:f=rtp:ssrc=${AUDIO_SSRC}:payload_type=${AUDIO_PT}]rtp://${ip}:${producer.audioTransport.tuple.localPort}?rtcpport=${producer.audioTransport.rtcpTuple.localPort}|[select=v:f=rtp:ssrc=${VIDEO_SSRC}:payload_type=${VIDEO_PT}]rtp://${ip}:${producer.videoTransport.tuple.localPort}?rtcpport=${producer.videoTransport.rtcpTuple.localPort}`
+  ]);
 
-  ffmpeg = exec(command.replace(/\n|\r/g, ''));
+  console.log('ffmpeg source:', ndiDevice, 'PID:', ffmpeg.pid);
 
-  console.log('ffmpeg source:', ndiDevice, 'command:', command);
+  const ffmpegLog = (data) => {
+    const logLine = data.toString();
 
-  ffmpeg.stdout.on('data', function (data) {
-    // console.log(data.toString());
-  });
+    // filter out standard FFMPEG output
+    if (logLine.match(/^\s*(frame=\s*(.+?))\s+(fps=\s*(.+?))\s+(q=\s*(.+?))\s+(size=\s*(.+?))\s+(time=\s*(.+?))\s+(bitrate=\s*(.+?))\s+(dup=\s*(.+?))\s+(drop=\s*(.+?))\s+(speed=\s*(.+?))\s*$/)
+        || logLine.match(/^\s*$/)) {
+      return;
+    }
 
-  ffmpeg.stderr.on('data', function (data) {
-    // console.log(data.toString());
-  });
+    console.log(logLine.trimEnd());
+  };
 
-  ffmpeg.on('exit', function (code) {
-    console.log(`ffmpeg ended, exit code: ${code}`);
+  ffmpeg.stdout.on('data', ffmpegLog);
+  ffmpeg.stderr.on('data', ffmpegLog);
+
+  ffmpeg.on('exit', function (code, signal) {
+    console.log(`ffmpeg ended, exit code: ${code}, signal: ${signal}`);
 
     ffmpegServiceReset();
   });
@@ -305,7 +311,7 @@ function ffmpegServiceReset() {
 }
 
 process.on('exit', () => {
-  ffmpeg && exec(`taskkill -F -T -PID ${ffmpeg.pid}`);
+  ffmpeg && ffmpeg.kill('SIGKILL');
 })
 
 // ----------------------------------------------------------------------------
