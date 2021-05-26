@@ -9,7 +9,13 @@ export const Edit = (props) => {
   const [ inputs, setInputs ] = useState({});
 
   if ( ! props.match) {
-    return 'wait';
+    return <div className="center">
+      <a id='match-new' onClick={() => FlowRouter.go('match.new')}/>
+      <div id='match-loading'>
+        { ! props.loaded ? <img src={`/icons/loader.gif`} alt='loading'/> :
+          <img src={`/icons/404.png`} className='not-found'  onClick={() => FlowRouter.go('match.latest')} alt='404'/> }
+      </div>
+    </div>;
   }
 
   const newMatchCreated = inputs._id && inputs._id !== props.match._id;
@@ -240,53 +246,77 @@ export const Edit = (props) => {
               <td>
                 &nbsp;&nbsp;
               </td>
-              <td>
-                { summary.left.name.replace(/\s*\(.+?\)/, '') }
+              <td className='player'>
+                <b>{ summary.left.name.replace(/\s*\(.+?\)\s*/, '') }</b>
               </td>
               <td>
                 &nbsp;-&nbsp;
               </td>
-              <td>
-                { summary.right.name.replace(/\s*\(.+?\)/, '') }
+              <td className='player'>
+                <b>{ summary.right.name.replace(/\s*\(.+?\)\s*/, '') }</b>
               </td>
             </tr>
             <tr>
               <td>
-                3
+                <i>3-bar</i>
               </td>
               <td/>
               <td>
-                { summary.left.bar[Bar.BAR_3][EventType.GOAL] } g - { summary.left.bar[Bar.BAR_3][EventType.MISS] } m - { summary.left.bar[Bar.BAR_3][EventType.FAIL] } f
+                <span>{ summary.left.bar[Bar.BAR_3][EventType.GOAL] } g</span>
+                -
+                <span>{ summary.left.bar[Bar.BAR_3][EventType.MISS] } m</span>
+                -
+                <span>{ summary.left.bar[Bar.BAR_3][EventType.FAIL] } f</span>
               </td>
               <td/>
               <td>
-                { summary.right.bar[Bar.BAR_3][EventType.GOAL] } g - { summary.right.bar[Bar.BAR_3][EventType.MISS] } m - { summary.right.bar[Bar.BAR_3][EventType.FAIL] } f
+                <span>{ summary.right.bar[Bar.BAR_3][EventType.GOAL] } g</span>
+                -
+                <span>{ summary.right.bar[Bar.BAR_3][EventType.MISS] } m</span>
+                -
+                <span>{ summary.right.bar[Bar.BAR_3][EventType.FAIL] } f</span>
               </td>
             </tr>
             <tr>
               <td>
-                5
+                <i>5-bar</i>
               </td>
               <td/>
               <td>
-                { summary.left.bar[Bar.BAR_5][EventType.GOAL] } g - { summary.left.bar[Bar.BAR_5][EventType.PASS] } p - { summary.left.bar[Bar.BAR_5][EventType.FAIL] } f
+                <span>{ summary.left.bar[Bar.BAR_5][EventType.GOAL] } g</span>
+                -
+                <span>{ summary.left.bar[Bar.BAR_5][EventType.PASS] } p</span>
+                -
+                <span>{ summary.left.bar[Bar.BAR_5][EventType.FAIL] } f</span>
               </td>
               <td/>
               <td>
-                { summary.right.bar[Bar.BAR_5][EventType.GOAL] } g - { summary.right.bar[Bar.BAR_5][EventType.PASS] } p - { summary.right.bar[Bar.BAR_5][EventType.FAIL] } f
+                <span>{ summary.right.bar[Bar.BAR_5][EventType.GOAL] } g</span>
+                -
+                <span>{ summary.right.bar[Bar.BAR_5][EventType.PASS] } p</span>
+                -
+                <span>{ summary.right.bar[Bar.BAR_5][EventType.FAIL] } f</span>
               </td>
             </tr>
             <tr>
               <td>
-                2
+                <i>2-bar</i>
               </td>
               <td/>
               <td>
-                { summary.left.bar[Bar.BAR_2][EventType.GOAL] } g - { summary.left.bar[Bar.BAR_2][EventType.PASS] } c - { summary.left.bar[Bar.BAR_2][EventType.FAIL] } f
+                <span>{ summary.left.bar[Bar.BAR_2][EventType.GOAL] } g</span>
+                -
+                <span>{ summary.left.bar[Bar.BAR_2][EventType.PASS] } c</span>
+                -
+                <span>{ summary.left.bar[Bar.BAR_2][EventType.FAIL] } f</span>
               </td>
               <td/>
               <td>
-                { summary.right.bar[Bar.BAR_2][EventType.GOAL] } g - { summary.right.bar[Bar.BAR_2][EventType.PASS] } c - { summary.right.bar[Bar.BAR_2][EventType.FAIL] } f
+                <span>{ summary.right.bar[Bar.BAR_2][EventType.GOAL] } g</span>
+                -
+                <span>{ summary.right.bar[Bar.BAR_2][EventType.PASS] } c</span>
+                -
+                <span>{ summary.right.bar[Bar.BAR_2][EventType.FAIL] } f</span>
               </td>
             </tr>
           <tr>
@@ -295,11 +325,11 @@ export const Edit = (props) => {
             </td>
             <td/>
             <td>
-              { summary.left.own } v
+              <span>{ summary.left.own } v</span>
             </td>
             <td/>
             <td>
-              { summary.right.own } v
+              <span>{ summary.right.own } v</span>
             </td>
           </tr>
           </tbody>

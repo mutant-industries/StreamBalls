@@ -18,6 +18,22 @@
   }
 }
 
+#match-loading {
+  display: flow-root;
+  text-align: center;
+  background: rgb(50, 50, 50);
+  background: radial-gradient(rgba(50, 50, 50, 1) 0%, rgba(8, 8, 8, 1) 50%, rgba(0, 0, 0, 1) 100%);
+  height: 112px;
+
+  img {
+    height: 112px;
+
+    &.not-found {
+      cursor: pointer;
+    }
+  }
+}
+
 #stats-control {
 
   border: 1px solid black;
@@ -30,6 +46,14 @@
 
   .stats-summary {
     float: left;
+
+    .player {
+      text-align: center;
+    }
+
+    span {
+      padding: 0 10px;
+    }
   }
 
   .stats-log {
