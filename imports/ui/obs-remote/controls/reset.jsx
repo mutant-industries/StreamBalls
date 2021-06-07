@@ -1,6 +1,13 @@
 import React from 'react';
 import { FlowRouter } from 'meteor/kadira:flow-router'
-import { TEXT_SOURCE_NAME, BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, START_SCENE_NAME } from "../control.jsx";
+import {
+  BACKGROUND_AUDIO_SOURCE_NAME,
+  CAMERA_SOURCE_NAME,
+  STATS_SOURCE_NAME,
+  TEXT_SOURCE_NAME,
+  READY_SCENE_NAME,
+  START_SCENE_NAME
+} from "../control.jsx";
 
 
 export class Reset extends React.Component {
@@ -27,11 +34,12 @@ export class Reset extends React.Component {
     this.handleResetSources();
 
     this.props.obs.send('RefreshBrowserSource', { sourceName: TEXT_SOURCE_NAME });
+    this.props.obs.send('RefreshBrowserSource', { sourceName: STATS_SOURCE_NAME });
 
-    const stats = this.props.match.stats || {};
-    stats.visible = false;
-
-    Meteor.call('match.edit', this.props.match._id, { stats });
+    this.props.obs.send('SetSceneItemProperties', { 'scene-name': READY_SCENE_NAME,  item: TEXT_SOURCE_NAME, visible: true });
+    this.props.obs.send('SetSceneItemProperties', { 'scene-name': START_SCENE_NAME,  item: TEXT_SOURCE_NAME, visible: true });
+    this.props.obs.send('SetSceneItemProperties', { 'scene-name': READY_SCENE_NAME,  item: STATS_SOURCE_NAME, visible: false });
+    this.props.obs.send('SetSceneItemProperties', { 'scene-name': START_SCENE_NAME,  item: STATS_SOURCE_NAME, visible: false });
   }
 
   handleStreamingKeyChange() {
@@ -57,6 +65,15 @@ export class Reset extends React.Component {
         is_local_file: false,
         shutdown: false,
         url: location.origin + FlowRouter.path('/matches/:_id/text', { _id: this.props.match._id }),
+        width: 1280
+      }});
+
+    this.props.obs.send('SetSourceSettings', { sourceName: STATS_SOURCE_NAME, sourceSettings: {
+        css: "body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }",
+        fps_custom: false,
+        is_local_file: false,
+        shutdown: false,
+        url: location.origin + FlowRouter.path('/matches/:_id/stats', { _id: this.props.match._id }),
         width: 1280
       }});
 

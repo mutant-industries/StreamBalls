@@ -24,7 +24,9 @@ const ZERO_TIMECODE = '00:00:00';
 export const BACKGROUND_AUDIO_SOURCE_NAME = 'background audio';
 export const CAMERA_SOURCE_NAME = 'OBS camera';
 export const TEXT_SOURCE_NAME = 'text';
+export const STATS_SOURCE_NAME = 'stats';
 export const START_SCENE_NAME = 'start';
+export const READY_SCENE_NAME = 'ready';
 
 export const BACKGROUND_AUDIO_MAX_VOLUME = 0.6; // * 100 [%]
 
@@ -59,6 +61,7 @@ const DEFAULT_STATE = {
   cameraAudioLevel: 0,
   sceneList: [],
   currentScene: '',
+  statsVisible: false,
   transitionRunning: false
 }
 
@@ -89,7 +92,7 @@ export class Control extends React.Component {
 
     this.obs.send('GetSceneList').then((data) => {
 
-      const expectedScenes = [START_SCENE_NAME];
+      const expectedScenes = [READY_SCENE_NAME, START_SCENE_NAME];
       let expectedScenesNo = expectedScenes.length;
 
       data.scenes.forEach(value => {
@@ -110,7 +113,7 @@ export class Control extends React.Component {
     });
 
     this.obs.send('GetSourcesList').then((data) => {
-      const expectedSources = [BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, TEXT_SOURCE_NAME];
+      const expectedSources = [BACKGROUND_AUDIO_SOURCE_NAME, CAMERA_SOURCE_NAME, TEXT_SOURCE_NAME, STATS_SOURCE_NAME];
       let expectedSourcesNo = expectedSources.length;
 
       data.sources.forEach(value => {
@@ -326,6 +329,19 @@ export class Control extends React.Component {
         this.obsValidateSettings();
 
         // ----------------------------------------------
+        // --- texts / stats scenes events, initial state
+
+        this.obs.send('GetSceneItemProperties', { 'scene-name': START_SCENE_NAME, item: STATS_SOURCE_NAME })
+          .then((data) => { this.setState({ statsVisible: data.visible });
+        });
+
+        this.obs.on('SceneItemVisibilityChanged', (data) => {
+          if (data['item-name'] === STATS_SOURCE_NAME) {
+            this.setState({ statsVisible: data['item-visible']});
+          }
+        });
+
+        // ----------------------------------------------
         // --- transition events
 
         this.obs.on('TransitionBegin', (data) => {
@@ -426,7 +442,7 @@ export class Control extends React.Component {
                           backgroundAudioLevel={this.state.backgroundAudioLevel}
                           cameraAudioLevel={this.state.cameraAudioLevel}/>
           <Stats obs={this.obs}
-                 match={this.props.match}/>
+                 statsVisible={this.state.statsVisible}/>
           <SceneList obs={this.obs}
                      currentScene={this.state.currentScene}
                      transitionRunning={this.state.transitionRunning}

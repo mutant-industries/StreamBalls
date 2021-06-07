@@ -1,26 +1,24 @@
 import React from 'react';
+import {READY_SCENE_NAME, START_SCENE_NAME, STATS_SOURCE_NAME, TEXT_SOURCE_NAME} from "../control.jsx";
 
 
 export class Stats extends React.Component {
 
   toggleVisible() {
-    const stats = this.props.match.stats || {};
-    stats.visible = ! stats.visible;
-
-    Meteor.call('match.edit', this.props.match._id, { stats });
+    this.props.obs.send('SetSceneItemProperties', { 'scene-name': READY_SCENE_NAME,  item: TEXT_SOURCE_NAME, visible: this.props.statsVisible });
+    this.props.obs.send('SetSceneItemProperties', { 'scene-name': START_SCENE_NAME,  item: TEXT_SOURCE_NAME, visible: this.props.statsVisible });
+    this.props.obs.send('SetSceneItemProperties', { 'scene-name': READY_SCENE_NAME,  item: STATS_SOURCE_NAME, visible: ! this.props.statsVisible });
+    this.props.obs.send('SetSceneItemProperties', { 'scene-name': START_SCENE_NAME,  item: STATS_SOURCE_NAME, visible: ! this.props.statsVisible });
   }
 
   // ------------------------------------------------------------
 
   render() {
-    const statsVisible = this.props.match && this.props.match.stats && this.props.match.stats.visible;
-
     return <div className="btn-group m-1" role="group">
       <button type="button"
               onClick={() => this.toggleVisible()}
-              disabled={ ! this.props.match}
-              className={`btn btn-secondary ${statsVisible ? 'btn-light' : 'btn-dark'}`}>
-        <img src={`/icons/stats${statsVisible ? '-active' : ''}.png`} className='b-crossfade' alt='stats'/>
+              className={`btn btn-secondary ${ this.props.statsVisible ? 'btn-light' : 'btn-dark' }`}>
+        <img src={`/icons/stats${ this.props.statsVisible ? '-active' : '' }.png`} className='b-crossfade' alt='stats'/>
       </button>
     </div>
   }

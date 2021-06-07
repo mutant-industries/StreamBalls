@@ -5,6 +5,7 @@ import { mount } from 'react-mounter'
 
 import { App } from '/imports/ui/app'
 import { Text } from "/imports/ui/match/text.jsx";
+import { Stats } from "/imports/ui/match/stats.jsx";
 import { Stream } from "/imports/ui/match/stream.jsx";
 
 FlowRouter.route('/', {
@@ -39,6 +40,15 @@ FlowRouter.route('/matches/:_id/text', {
   action(params) {
     mount(App, {
       content: <Text matchId={params._id}/>
+    })
+  }
+})
+
+FlowRouter.route('/matches/:_id/stats', {
+  name: 'match.stats',
+  action(params) {
+    mount(App, {
+      content: <Stats matchId={params._id}/>
     })
   }
 })

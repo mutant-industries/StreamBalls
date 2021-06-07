@@ -11,6 +11,7 @@
 
     &.about {
       width: 696px;
+      opacity: 0.9;
 
       .event_competition {
         font-size: 36px;
@@ -30,22 +31,11 @@
         font-size: 22px;
         margin: 17px 0;
       }
-
-      &.hidden {
-        visibility: hidden;
-        opacity: 0;
-        transition: visibility 0s 1s, opacity 1s ease-out;
-      }
-
-      &.visible {
-        visibility: visible;
-        opacity: 0.9;
-        transition: opacity 1s ease-in;
-      }
     }
 
     &.stats {
-    width: 1000px;
+      width: 1000px;
+      opacity: 0.9;
 
       .results {
         width: 100%;
@@ -101,18 +91,6 @@
         .footnote {
           font-size: 12px;
         }
-      }
-
-      &.hidden {
-        visibility: hidden;
-        opacity: 0;
-        transition: visibility 0s 1s, opacity 1s ease-out;
-      }
-
-      &.visible {
-        visibility: visible;
-        opacity: 0.9;
-        transition: opacity 1s ease-in;
       }
     }
   }
