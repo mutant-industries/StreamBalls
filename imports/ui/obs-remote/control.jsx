@@ -82,6 +82,8 @@ export class Control extends React.Component {
 
     this.streamingTimeUpdater = new TimeUpdater(this, 'streamTimecode');
     this.recordingTimeUpdater = new TimeUpdater(this, 'recordTimecode');
+
+    window.obs = this.obs;
   }
 
   // ------------------------------------------------------------
