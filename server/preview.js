@@ -163,7 +163,6 @@ Meteor.methods({
     });
   },
   resetFfmpegService() {
-    // https://stackoverflow.com/a/48202480
     ffmpeg && ffmpeg.kill('SIGKILL');
   }
 });
@@ -290,7 +289,7 @@ function ffmpegServiceReset() {
 
   grandiose.find({
     showLocalSources: true
-    // extraIPs: [ "192.168.87.9"]
+    // extraIPs: [ "192.168.XX.1"]
   }, 30000)
     .then(async (result) => {
       for (const device of result) {

@@ -28,7 +28,7 @@ export const STATS_SOURCE_NAME = 'stats';
 export const START_SCENE_NAME = 'start';
 export const READY_SCENE_NAME = 'ready';
 
-export const BACKGROUND_AUDIO_MAX_VOLUME = 0.6; // * 100 [%]
+export const BACKGROUND_AUDIO_MAX_VOLUME = 0.5; // * 100 [%]
 
 const DEFAULT_STATE = {
   connected: false,

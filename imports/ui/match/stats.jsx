@@ -102,7 +102,7 @@ export const Stats = (props) => {
     }
 
     createPlayerStatsRow(statsP1);
-    columns.push(<td key={columnId++}>{ title }</td>);
+    columns.push(<td key={columnId++}><i>{ title }</i></td>);
     createPlayerStatsRow(statsP2);
 
     return columns;
@@ -115,16 +115,16 @@ export const Stats = (props) => {
     let labelColumnId = 0;
 
     const createPlayerStatsLabel = () => {
-      labelColumns.push(<td key={labelColumnId++}> G </td>);
-      labelColumns.push(<td key={labelColumnId++} className='sum'> &#8721; </td>);
-      labelColumns.push(<td key={labelColumnId++}> % </td>);
+      labelColumns.push(<td key={labelColumnId++}><b> G </b></td>);
+      labelColumns.push(<td key={labelColumnId++} className='sum'><b> &#8721; </b></td>);
+      labelColumns.push(<td key={labelColumnId++}><b> % </b></td>);
 
-      labelColumns.push(<td key={labelColumnId++}> G </td>);
-      labelColumns.push(<td key={labelColumnId++}> P </td>);
-      labelColumns.push(<td key={labelColumnId++} className='sum'> &#8721; </td>);
-      labelColumns.push(<td key={labelColumnId++}> % </td>);
+      labelColumns.push(<td key={labelColumnId++}><b> G </b></td>);
+      labelColumns.push(<td key={labelColumnId++}><b> P </b></td>);
+      labelColumns.push(<td key={labelColumnId++} className='sum'><b> &#8721; </b></td>);
+      labelColumns.push(<td key={labelColumnId++}><b> % </b></td>);
 
-      labelColumns.push(<td key={labelColumnId++}> G </td>);
+      labelColumns.push(<td key={labelColumnId++}><b> G </b></td>);
     }
 
     createPlayerStatsLabel();

@@ -179,7 +179,7 @@ export const Edit = (props) => {
 
       eventText += event.type === EventType.GOAL ? 'goal' :
         event.type === EventType.MISS ? 'miss' :
-        event.type === EventType.PASS ? 'pass' :
+        event.type === EventType.PASS ? event.bar === Bar.BAR_2 ? 'clear' : 'pass' :
         event.type === EventType.FAIL ? 'fail' :
         event.type === EventType.WIN ? 'win' :
         event.type === EventType.OWN_GOAL ? 'own goal' : 'bar';

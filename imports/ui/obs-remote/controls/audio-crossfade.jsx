@@ -1,7 +1,7 @@
 import React from 'react';
 import { BACKGROUND_AUDIO_SOURCE_NAME, BACKGROUND_AUDIO_MAX_VOLUME, CAMERA_SOURCE_NAME } from "../control.jsx";
 
-const VOLUME_UPDATE_INTERVAL = 200;  // [ms]
+const VOLUME_UPDATE_INTERVAL = 800;  // [ms]
 
 
 export class AudioCrossfade extends React.Component {
@@ -50,13 +50,13 @@ export class AudioCrossfade extends React.Component {
 
       if (this.directionToCamera) {
         backgroundAudioLevel -= instance.step / 100;
-        cameraAudioLevel += instance.step / 100;
+        cameraAudioLevel += instance.step * (1 / BACKGROUND_AUDIO_MAX_VOLUME) / 100;
 
         backgroundAudioLevel = Math.max(backgroundAudioLevel, 0);
         cameraAudioLevel = Math.min(cameraAudioLevel, 1);
       }
       else {
-        cameraAudioLevel -= instance.step / 100;
+        cameraAudioLevel -= instance.step * (1 / BACKGROUND_AUDIO_MAX_VOLUME) / 100;
         backgroundAudioLevel += instance.step / 100;
 
         cameraAudioLevel = Math.max(cameraAudioLevel, 0);

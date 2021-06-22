@@ -60,7 +60,6 @@ export class Reset extends React.Component {
 
   handleResetSources() {
     this.props.obs.send('SetSourceSettings', { sourceName: TEXT_SOURCE_NAME, sourceSettings: {
-        css: "body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }",
         fps_custom: false,
         is_local_file: false,
         shutdown: false,
@@ -69,7 +68,6 @@ export class Reset extends React.Component {
       }});
 
     this.props.obs.send('SetSourceSettings', { sourceName: STATS_SOURCE_NAME, sourceSettings: {
-        css: "body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }",
         fps_custom: false,
         is_local_file: false,
         shutdown: false,
