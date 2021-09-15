@@ -1,0 +1,23 @@
+diff --git a/configure b/configure
+index 117e865c6e..94d31bcb8d 100755
+--- a/configure
++++ b/configure
+@@ -6414,12 +6414,12 @@ enabled libopenjpeg       && { check_pkg_config libopenjpeg "libopenjp2 >= 2.1.0
+ enabled libopenmpt        && require_pkg_config libopenmpt "libopenmpt >= 0.2.6557" libopenmpt/libopenmpt.h openmpt_module_create -lstdc++ && append libopenmpt_extralibs "-lstdc++"
+ enabled libopenvino       && require libopenvino c_api/ie_c_api.h ie_c_api_version -linference_engine_c_api
+ enabled libopus           && {
+-    enabled libopus_decoder && {
+-        require_pkg_config libopus opus opus_multistream.h opus_multistream_decoder_create
+-    }
+-    enabled libopus_encoder && {
+-        require_pkg_config libopus opus opus_multistream.h opus_multistream_surround_encoder_create
+-    }
++    enabled libopus_decoder && { check_pkg_config libopus opus opus_multistream.h opus_multistream_decoder_create ||
++                               { require libopus opus_multistream.h opus_multistream_decoder_create -lopus &&
++                                 warn "using libopus without pkg-config"; } }
++    enabled libopus_encoder && { check_pkg_config libopus opus opus_multistream.h opus_multistream_surround_encoder_create ||
++                               { require libopus opus_multistream.h opus_multistream_surround_encoder_create -lopus &&
++                                 warn "using libopus without pkg-config"; } }
+ }
+ enabled libpulse          && require_pkg_config libpulse libpulse pulse/pulseaudio.h pa_context_new
+ enabled librabbitmq       && require_pkg_config librabbitmq "librabbitmq >= 0.7.1" amqp.h amqp_new_connection

@@ -1,0 +1,49 @@
+diff --git a/configure b/configure
+index f4a4d8367e..48a5ba3ac9 100755
+--- a/configure
++++ b/configure
+@@ -6444,7 +6444,7 @@ enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_
+ # pkg-config support.  Instead, users should make sure that the build
+ # can find the libraries and headers through other means.
+ enabled libmfx            && { check_pkg_config libmfx libmfx "mfx/mfxvideo.h" MFXInit ||
+-                               { require libmfx "mfx/mfxvideo.h" MFXInit "-llibmfx $advapi32_extralibs" && warn "using libmfx without pkg-config"; } }
++                               { require libmfx "mfx/mfxvideo.h" MFXInit "-llibmfx -llegacy_stdio_definitions $advapi32_extralibs" && warn "using libmfx without pkg-config"; } }
+ if enabled libmfx; then
+    check_cc MFX_CODEC_VP9 "mfx/mfxvp9.h mfx/mfxstructures.h" "MFX_CODEC_VP9"
+ fi
+diff --git a/libavcodec/qsvenc.h b/libavcodec/qsvenc.h
+index fc8a14143e..b67d46c4e9 100644
+--- a/libavcodec/qsvenc.h
++++ b/libavcodec/qsvenc.h
+@@ -36,7 +36,7 @@
+ #include "qsv_internal.h"
+
+ #define QSV_HAVE_CO2 QSV_VERSION_ATLEAST(1, 6)
+-#define QSV_HAVE_CO3 QSV_VERSION_ATLEAST(1, 11)
++#define QSV_HAVE_CO3 0
+ #define QSV_HAVE_CO_VPS  QSV_VERSION_ATLEAST(1, 17)
+
+ #define QSV_HAVE_EXT_HEVC_TILES QSV_VERSION_ATLEAST(1, 13)
+@@ -51,19 +51,19 @@
+ #define QSV_HAVE_LA_HRD QSV_VERSION_ATLEAST(1, 11)
+ #define QSV_HAVE_VDENC  QSV_VERSION_ATLEAST(1, 15)
+
+-#define QSV_HAVE_GPB    QSV_VERSION_ATLEAST(1, 18)
++#define QSV_HAVE_GPB    0
+
+ #if defined(_WIN32) || defined(__CYGWIN__)
+ #define QSV_HAVE_AVBR   QSV_VERSION_ATLEAST(1, 3)
+ #define QSV_HAVE_ICQ    QSV_VERSION_ATLEAST(1, 8)
+ #define QSV_HAVE_VCM    QSV_VERSION_ATLEAST(1, 8)
+-#define QSV_HAVE_QVBR   QSV_VERSION_ATLEAST(1, 11)
++#define QSV_HAVE_QVBR   0
+ #define QSV_HAVE_MF     0
+ #else
+ #define QSV_HAVE_AVBR   0
+ #define QSV_HAVE_ICQ    QSV_VERSION_ATLEAST(1, 28)
+ #define QSV_HAVE_VCM    0
+-#define QSV_HAVE_QVBR   QSV_VERSION_ATLEAST(1, 28)
++#define QSV_HAVE_QVBR   0
+ #define QSV_HAVE_MF     QSV_VERSION_ATLEAST(1, 25)
+ #endif
+ 
