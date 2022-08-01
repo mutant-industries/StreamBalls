@@ -5,8 +5,8 @@ import { config } from './config';
 
 const ni = require('network-interfaces');
 const mediasoup = require('mediasoup');
+const os = require('os');
 const { spawn } = require('child_process');
-const grandiose = require('grandiose');
 
 // ----------------------------------------------------------------------------
 
@@ -21,6 +21,33 @@ let ffmpeg;
 let started;
 const producer = {};
 const clients = [];
+
+// ----------------------------------------------------------------------------
+
+let ffmpeg_accel_device_params = [`-init_hw_device`, `qsv=hw`, `-hwaccel`, `qsv`];
+let ffmpeg_encoder_params = [`-map`, `0:a:0`,
+  `-c:a`, `libopus`, `-b:a`, `12k`, `-vbr`, `off`,
+  `-application`, `lowdelay`, `-frame_duration`, `20`, `-apply_phase_inv`, `false`,
+  `-map`, `0:v:0`,
+  `-c:v`, `h264_qsv`,
+  `-vf`, `hwupload=extra_hw_frames=64,vpp_qsv=w=iw/2:h=ih/2`,
+  `-r`, `30`, `-g`, `60`,
+  `-b:v`, `1400K`, `-minrate`, `1400K`, `-maxrate`, `1400K`, `-bufsize`, `50`,
+  `-preset`, `veryfast`, `-profile:v`, `baseline`, `-look_ahead`, `0`];
+
+if (os.platform() === "linux") {
+  ffmpeg_accel_device_params = [`-init_hw_device`, `vaapi=acce:/dev/dri/renderD128`, `-hwaccel`, `vaapi`,
+    `-hwaccel_output_format`, `vaapi`, `-hwaccel_device`, `acce`, `-filter_hw_device`, `acce`];
+  ffmpeg_encoder_params = [`-map`, `0:a:0`,
+    `-c:a`, `libopus`, `-b:a`, `12k`, `-vbr`, `off`,
+    `-application`, `lowdelay`, `-frame_duration`, `20`, `-apply_phase_inv`, `false`,
+    `-map`, `0:v:0`,
+    `-c:v`, `h264_vaapi`,
+    `-vf`, `hwupload,scale_vaapi=w=iw/2:h=ih/2:format=nv12`,
+    `-r`, `30`, `-g`, `60`,
+    `-rc_mode`, `CQP`, `-profile:v`, `constrained_baseline`,
+    `-level`, `4.0`, `-qp:v`, `32`, `-bf`, `0`];
+}
 
 // ----------------------------------------------------------------------------
 
@@ -240,18 +267,7 @@ async function ffmpegRun(ndiDevice) {
   const ip = config.mediasoup.plainTransport.listenIp;
 
   ffmpeg = spawn(`ffmpeg`, [`-hide_banner`,
-    `-init_hw_device`, `qsv=hw`, `-hwaccel`, `qsv`,
-    `-f`, `libndi_newtek`,
-    `-i`, `${ndiDevice.name}`,
-    `-map`, `0:a:0`,
-    `-c:a`, `libopus`, `-b:a`, `12k`, `-vbr`, `off`,
-    `-application`, `lowdelay`, `-frame_duration`, `20`, `-apply_phase_inv`, `false`,
-    `-map`, `0:v:0`,
-    `-c:v`, `h264_qsv`,
-    `-vf`, `vpp_qsv=w=iw/2:h=ih/2`,
-    `-r`, `30`, `-g`, `60`,
-    `-b:v`, `1400K`, `-minrate`, `1400K`, `-maxrate`, `1400K`, `-bufsize`, `50`,
-    `-preset`, `veryfast`, `-profile:v`, `baseline`, `-look_ahead`, `0`,
+    ...ffmpeg_accel_device_params, `-f`, `libndi_newtek`, `-i`, `${ndiDevice}`,  ...ffmpeg_encoder_params,
     `-f`, `tee`,
     `[select=a:f=rtp:ssrc=${AUDIO_SSRC}:payload_type=${AUDIO_PT}]rtp://${ip}:${producer.audioTransport.tuple.localPort}?rtcpport=${producer.audioTransport.rtcpTuple.localPort}|[select=v:f=rtp:ssrc=${VIDEO_SSRC}:payload_type=${VIDEO_PT}]rtp://${ip}:${producer.videoTransport.tuple.localPort}?rtcpport=${producer.videoTransport.rtcpTuple.localPort}`
   ]);
@@ -276,7 +292,7 @@ async function ffmpegRun(ndiDevice) {
   ffmpeg.on('exit', function (code, signal) {
     console.log(`ffmpeg ended, exit code: ${code}, signal: ${signal}`);
 
-    ffmpegServiceReset();
+    setTimeout(() => ffmpegServiceReset(), 500);
   });
 
   setPreviewStreamReady(true);
@@ -286,27 +302,29 @@ function ffmpegServiceReset() {
   console.log('calling ffmpegServiceReset');
 
   setPreviewStreamReady(false);
+  let deviceFound = false;
 
-  grandiose.find({
-    showLocalSources: true
-    // extraIPs: [ "192.168.XX.1"]
-  }, 30000)
-    .then(async (result) => {
-      for (const device of result) {
-        if (device.name.match(/\(OBS\)/) !== null) {
-          return ffmpegRun(device);
-        }
-      }
+  const ffmpeg_ndi_lookup = spawn(`ffmpeg`, [`-f`, `libndi_newtek`, `-find_sources`, `1`, `-i`, `dummy`]);
 
-      console.log('no OBS NDI source found', result);
-      // avoid stack overflow
-      setTimeout(ffmpegServiceReset, 0);
-    })
-    .catch((err) => {
-      console.log('NDI find failed', err);
-      // avoid stack overflow
-      setTimeout(ffmpegServiceReset, 0);
-    });
+  const ffmpegOutputHandle = (data) => {
+    const logLine = data.toString();
+
+    const pattern = new RegExp(/[a-zA-Z0-9_-]+\s*\(OBS\)/);
+
+    if (pattern.test(logLine)) {
+      deviceFound = true;
+      ffmpegRun(pattern.exec(logLine)[0]);
+    }
+  };
+
+  ffmpeg_ndi_lookup.stdout.on('data', ffmpegOutputHandle);
+  ffmpeg_ndi_lookup.stderr.on('data', ffmpegOutputHandle);
+
+  ffmpeg_ndi_lookup.on('exit', (exitCode) => {
+    if ( ! deviceFound) {
+      setTimeout(() => ffmpegServiceReset(), 500);
+    }
+  });
 }
 
 process.on('exit', () => {

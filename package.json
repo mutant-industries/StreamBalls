@@ -12,18 +12,17 @@
   "dependencies": {
     "@babel/runtime": "^7.14.0",
     "bootstrap": "^5.0.0",
-    "grandiose": "0.0.4",
     "jquery": "^3.6.0",
-    "mediasoup": "^3.7.4",
+    "mediasoup": "^3.10.5",
     "mediasoup-client": "^3.6.30",
     "meteor-node-stubs": "^1.0.1",
     "network-interfaces": "^1.1.0",
-    "obs-websocket-js": "^4.0.2",
+    "obs-websocket-js": "^4.0.3",
     "popper.js": "^1.16.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
     "react-keyboard-event-handler": "^1.5.4",
-    "react-mounter": "^1.2.0"
+    "react-meteor-mounter": "^1.2.2"
   },
   "meteor": {
     "testModule": "tests/main.js"
@@ -31,13 +30,13 @@
   "devDependencies": {
     "@meteorjs/eslint-config-meteor": "^1.0.5",
     "babel-eslint": "^10.1.0",
-    "eslint": "^7.25.0",
+    "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-import-resolver-meteor": "^0.4.0",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsx-a11y": "^6.6.1",
     "eslint-plugin-meteor": "^7.3.0",
-    "eslint-plugin-react": "^7.23.2"
+    "eslint-plugin-react": "^7.30.1"
   },
   "eslintConfig": {
     "extends": "@meteorjs/eslint-config-meteor"

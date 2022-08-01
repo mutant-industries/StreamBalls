@@ -4,7 +4,7 @@ import subprocess
 import os
 import threading
 
-application_bundle_root = 'd:/stream/bundle'
+application_bundle_root = 'd:/stream/_build/'
 application_root_url = "http://localhost"
 application_port = "3000"
 

@@ -9,7 +9,7 @@ Preview screen is also a tool, that enables some further user actions, such as g
 
 The project is based on [meteor-js](https://www.meteor.com) and [react](https://reactjs.org). Meteor was chosen due to it's real-time nature. Any update done in StreamBalls interface is immediately (via websocket) projected into all connected clients, so that content of mentioned OBS browser sources is updated without delay.
 
-Live preview uses OBS low latency NDI output ([obs-ndi](https://obsproject.com/forum/resources/obs-ndi-newtek-ndi™-integration-into-obs-studio.528/)), ffmpeg with built-in NDI I/O support as preview stream encoder, and WebRTC ([mediasoup](https://mediasoup.org)) to deliver output (both audio and video) to the browser. When camera also uses NDI (e.g. [OBS camera](https://obs.camera) or [NDI HX](https://play.google.com/store/apps/details?id=com.newtek.ndi.hxcam&hl=de&gl=US)) then glass-to-glass delay (camera to browser) is 500ms.
+Live preview uses OBS low latency NDI output ([obs-ndi](https://obsproject.com/forum/resources/obs-ndi-newtek-ndiâ„¢-integration-into-obs-studio.528/)), ffmpeg with built-in NDI I/O support as preview stream encoder, and WebRTC ([mediasoup](https://mediasoup.org)) to deliver output (both audio and video) to the browser. When camera also uses NDI (e.g. [OBS camera](https://obs.camera) or [NDI HX](https://play.google.com/store/apps/details?id=com.newtek.ndi.hxcam&hl=de&gl=US)) then glass-to-glass delay (camera to browser) is 500ms.
 
 ### Available OBS actions
 - start / stop streaming / recording
@@ -44,7 +44,7 @@ In general there are many alternative ways to connect moreless any device to PC 
 
 ### 2. Streaming PC
 
-The PC used to run OBS and StreamBalls application does not need to be some cutting-edge hardware. Lag-free streaming in [Standard HD](https://en.wikipedia.org/wiki/720p) is tested with [IdeaPad U430](https://www.cnet.com/products/lenovo-u430-touch-14-core-i7-4500u-4-gb-ram-500-gb-hybrid-drive/) running Windows 8. It is recommended to connect this PC to network via ethernet cable and configure QoS on router to reserve enough upload bandwidth for streaming. It is also a good idea to reserve static IP or assign hostname to this machine to make life easier when connecting to it from other device. StreamBalls and FFmpeg can be built on different hardware and the result can be just copied here, so there is no need to install Visual Studio, Meteor and other tools needed just for development or build purposes. It should only be enough to install and configure [OBS](https://obsproject.com) and install [nodejs](https://nodejs.org/en/download/) and [mongodb](https://www.mongodb.com/try/download/community), set firewall rules and copy ffmpeg and application bundle here. As a result when OBS is started on this machine all further actions should be handled remotely, however it is not a problem to connect to StreamBalls from here, it's only impractical.
+The PC used to run OBS and StreamBalls application does not need to be some cutting-edge hardware. Lag-free streaming in [Standard HD](https://en.wikipedia.org/wiki/720p) is tested with [IdeaPad U430](https://www.cnet.com/products/lenovo-u430-touch-14-core-i7-4500u-4-gb-ram-500-gb-hybrid-drive/) running Windows 8. It is recommended to connect this PC to network via ethernet cable and configure QoS on router to reserve enough upload bandwidth for streaming. It is also a good idea to reserve static IP or assign hostname to this machine to make life easier when connecting to it from other device. StreamBalls and FFmpeg can be built on different hardware and the result can be just copied here, so there is no need to install Visual Studio, Meteor and other tools needed just for development or build purposes. It should only be enough to install and configure [OBS](https://obsproject.com) and install [nodejs](https://nodejs.org/download/release/v14.20.0/) and [mongodb](https://www.mongodb.com/try/download/community), set firewall rules and copy ffmpeg and application bundle here. As a result when OBS is started on this machine all further actions should be handled remotely, however it is not a problem to connect to StreamBalls from here, it's only impractical.
 
 ### 3. Remote Control
 
@@ -52,7 +52,7 @@ Any device capable of running web browser can be used to connect to StreamBalls 
 
 ## Installation
 
-For the sake of simplicity I'll assume that the build of all needed stuff shall be done on the same machine, where the result shall be deployed. First of all follow steps described in [ffmpeg how-to](doc/ffmpeg.md) to have FFmpeg with NDI IO support in PATH. When this is done, we can assume that both git and Visual Studio needed to build some components of StreamBalls (e.g. mediasoup or grandiose) are present. Now install [nodejs](https://nodejs.org/en/download/) and then Meteor by running the following command from cmd
+For the sake of simplicity I'll assume that the build of all needed stuff shall be done on the same machine, where the result shall be deployed. First of all follow steps described in [ffmpeg how-to](doc/ffmpeg.md) to have FFmpeg with NDI IO support in PATH. When this is done, we can assume that both git and Visual Studio needed to build some components of StreamBalls (e.g. mediasoup) are present. Now install [nodejs](https://nodejs.org/download/release/v14.20.0/) (tested version is v14.20.0 with npm 6.14.17) and then Meteor by running the following command from cmd
 
     npm install -g meteor
 
@@ -116,9 +116,9 @@ Running meteor application in development mode on production environment makes n
     
     set PROJECT_ROOT=d:\stream
     set STREAMBALLS_REPOSITORY_ROOT=%PROJECT_ROOT%\streamballs
-
+    
     rem remove any existing build
-    rd /s /q "%PROJECT_ROOT%\bundle"
+    rd /s /q "%PROJECT_ROOT%\_build"
     rem remove any existing temporary files
     rd /s /q "%PROJECT_ROOT%\temp"
     
@@ -140,8 +140,11 @@ Running meteor application in development mode on production environment makes n
     rem build application for production (https://github.com/meteor/meteor/issues/6270)
     call meteor build --server-only --allow-superuser --architecture os.windows.x86_64 --directory "%PROJECT_ROOT%"
     
+    rem rename target directory
+    cd /D "%PROJECT_ROOT%" && mv bundle _build
+    
     rem install npm dependencies
-    cd /D "%PROJECT_ROOT%\bundle\programs\server"
+    cd /D "%PROJECT_ROOT%\_build\programs\server"
     call npm install
     
     rem delete temp directory

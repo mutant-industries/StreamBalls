@@ -1,7 +1,7 @@
 import { Meteor } from "meteor/meteor";
 import React from 'react'
 import { FlowRouter } from 'meteor/kadira:flow-router'
-import { mount } from 'react-mounter'
+import { mount } from 'react-meteor-mounter'
 
 import { App } from '/imports/ui/app'
 import { Text } from "/imports/ui/match/text.jsx";
