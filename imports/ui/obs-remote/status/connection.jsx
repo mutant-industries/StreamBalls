@@ -9,7 +9,7 @@ export class Connection extends React.Component {
       <span className={ 'status connection-status ' + (this.props.connected ? 'obs-connected' : 'obs-unreachable') }
             onClick={ () => this.props.resetHandler() }/>
       <span className={ 'status settings-status ' + (this.props.settingsValid ? 'settings-valid' : 'settings-invalid') }
-            onClick={ () => Meteor.call('resetFfmpegService') }/>
+            onClick={ () => Meteor.call('toggleFfmpegService') }/>
     </div>
   }
 }

@@ -1,6 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { check } from 'meteor/check';
-import { StateCollection, PREVIEW_STREAM_READY_KEY } from '/imports/api/state';
+import { StateCollection, PREVIEW_STREAM_ACTIVE_KEY, PREVIEW_STREAM_READY_KEY } from '/imports/api/state';
 import { config } from './config';
 
 const ni = require('network-interfaces');
@@ -21,6 +21,9 @@ let ffmpeg;
 let started;
 const producer = {};
 const clients = [];
+
+// start OBS preview encoder only when active
+let ffmpegServiceActive;
 
 // ----------------------------------------------------------------------------
 
@@ -54,10 +57,17 @@ if (os.platform() === "linux") {
 Meteor.startup(async () => {
 
   started = new Promise(async (resolve) => {
+    // preview stream active state
+    if (StateCollection.find({ key: PREVIEW_STREAM_ACTIVE_KEY }).count() === 0) {
+      StateCollection.insert({ key: PREVIEW_STREAM_ACTIVE_KEY, value: true });
+    }
+
     // preview stream ready state
     if (StateCollection.find({ key: PREVIEW_STREAM_READY_KEY }).count() === 0) {
       StateCollection.insert({ key: PREVIEW_STREAM_READY_KEY, value: false });
     }
+
+    ffmpegServiceActive = StateCollection.findOne({ key: PREVIEW_STREAM_ACTIVE_KEY }).value;
 
     // mediasoup worker, router
     worker = await mediasoup.createWorker({
@@ -87,6 +97,16 @@ Meteor.publish('state', function (key) {
   check(key, String);
 
   return StateCollection.find({ key });
+});
+
+const togglePreviewStreamActive = Meteor.bindEnvironment(() => {
+  const stateDoc = StateCollection.findOne({ key: PREVIEW_STREAM_ACTIVE_KEY });
+
+  StateCollection.update(stateDoc._id, {
+    $set: { value: ! stateDoc.value }
+  });
+
+  return ! stateDoc.value;
 });
 
 const setPreviewStreamReady = Meteor.bindEnvironment((ready) => {
@@ -189,8 +209,10 @@ Meteor.methods({
       paused ? consumer.pause() : consumer.resume();
     });
   },
-  resetFfmpegService() {
-    ffmpeg && ffmpeg.kill('SIGKILL');
+  toggleFfmpegService() {
+    ffmpegServiceActive = togglePreviewStreamActive();
+
+    ffmpegServiceReset();
   }
 });
 
@@ -292,17 +314,25 @@ async function ffmpegRun(ndiDevice) {
   ffmpeg.on('exit', function (code, signal) {
     console.log(`ffmpeg ended, exit code: ${code}, signal: ${signal}`);
 
-    setTimeout(() => ffmpegServiceReset(), 500);
+    if (ffmpegServiceActive) {
+      setTimeout(() => ffmpegServiceReset(), 500);
+    }
   });
 
   setPreviewStreamReady(true);
 }
 
 function ffmpegServiceReset() {
-  console.log('calling ffmpegServiceReset');
+  console.log('calling ffmpegServiceReset, ffmpegServiceActive: ' + ffmpegServiceActive);
 
   setPreviewStreamReady(false);
   let deviceFound = false;
+
+  if ( ! ffmpegServiceActive) {
+    ffmpeg && ffmpeg.kill('SIGKILL');
+
+    return;
+  }
 
   const ffmpeg_ndi_lookup = spawn(`ffmpeg`, [`-f`, `libndi_newtek`, `-find_sources`, `1`, `-i`, `dummy`]);
 
